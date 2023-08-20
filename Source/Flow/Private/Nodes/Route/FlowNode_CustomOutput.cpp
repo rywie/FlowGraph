@@ -12,7 +12,7 @@ UFlowNode_CustomOutput::UFlowNode_CustomOutput(const FObjectInitializer& ObjectI
 	OutputPins.Empty();
 }
 
-void UFlowNode_CustomOutput::ExecuteInput(const FName& PinName)
+void UFlowNode_CustomOutput::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	UFlowAsset* FlowAsset = GetFlowAsset();
 	check(IsValid(FlowAsset));
@@ -44,7 +44,7 @@ void UFlowNode_CustomOutput::ExecuteInput(const FName& PinName)
 	}
 	else
 	{
-		FlowAsset->TriggerCustomOutput(EventName);
+		FlowAsset->TriggerCustomOutput(EventName, FlowParameter);
 	}
 }
 

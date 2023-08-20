@@ -43,7 +43,7 @@ private:
 	FColor TextColor;
 
 protected:
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 
 #if WITH_EDITOR
 public:

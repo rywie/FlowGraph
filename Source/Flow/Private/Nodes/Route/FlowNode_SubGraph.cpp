@@ -45,7 +45,7 @@ void UFlowNode_SubGraph::FlushContent()
 	}
 }
 
-void UFlowNode_SubGraph::ExecuteInput(const FName& PinName)
+void UFlowNode_SubGraph::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (CanBeAssetInstanced() == false)
 	{
@@ -71,7 +71,7 @@ void UFlowNode_SubGraph::ExecuteInput(const FName& PinName)
 	}
 	else if (!PinName.IsNone())
 	{
-		GetFlowAsset()->TriggerCustomInput_FromSubGraph(this, PinName);
+		GetFlowAsset()->TriggerCustomInput_FromSubGraph(this, PinName, FlowParameter);
 	}
 }
 

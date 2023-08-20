@@ -36,10 +36,13 @@ private:
 	UPROPERTY(SaveGame)
 	float RemainingStepTime;
 
-protected:
-	virtual void ExecuteInput(const FName& PinName) override;
+	UPROPERTY(SaveGame)
+	FFlowParameter CachedFlowParameter;
 
-	virtual void SetTimer();
+protected:
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
+
+	virtual void SetTimer(const FFlowParameter &FlowParameter = FFlowParameter());
 	virtual void Restart();
 	
 private:
@@ -48,6 +51,9 @@ private:
 
 	UFUNCTION()
 	void OnCompletion();
+
+	void OnParameterStep(const FFlowParameter &FlowParameter);
+	void OnParameterCompletion(const FFlowParameter &FlowParameter);
 
 protected:
 	virtual void Cleanup() override;

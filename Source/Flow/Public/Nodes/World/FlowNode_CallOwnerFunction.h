@@ -72,11 +72,11 @@ protected:
 #endif // WITH_EDITOR
 
 	//Begin UFlowNode protected
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 	//End UFlowNode protected
 
 	bool ShouldFinishForOutputName(const FName& OutputName) const;
-	bool TryExecuteOutputPin(const FName& OutputName);
+	bool TryExecuteOutputPin(const FName& OutputName, const FFlowParameter &FlowParameter);
 
 	bool TryAllocateParamsInstance();
 

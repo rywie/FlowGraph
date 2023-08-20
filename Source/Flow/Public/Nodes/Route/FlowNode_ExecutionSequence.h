@@ -22,7 +22,7 @@ class FLOW_API UFlowNode_ExecutionSequence final : public UFlowNode
 	virtual void OnLoad_Implementation() override;
 	
 protected:
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 
 	/**
 	 * If enabled and the flowgraph is saved during gameplay, this node
@@ -42,5 +42,8 @@ protected:
 	UPROPERTY(SaveGame)
 	TSet<FGuid> ExecutedConnections;
 	
+	UPROPERTY(SaveGame)
+	FFlowParameter CachedFlowParameter;
+
 	void ExecuteNewConnections();
 };

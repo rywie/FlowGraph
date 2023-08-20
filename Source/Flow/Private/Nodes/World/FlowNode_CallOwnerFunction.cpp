@@ -21,9 +21,9 @@ UFlowNode_CallOwnerFunction::UFlowNode_CallOwnerFunction()
 #endif // WITH_EDITOR
 }
 
-void UFlowNode_CallOwnerFunction::ExecuteInput(const FName& PinName)
+void UFlowNode_CallOwnerFunction::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
-	Super::ExecuteInput(PinName);
+	Super::ExecuteInput(PinName, FlowParameter);
 
 	if (!IsValid(Params))
 	{
@@ -62,10 +62,10 @@ void UFlowNode_CallOwnerFunction::ExecuteInput(const FName& PinName)
 
 	Params->PostExecute();
 
-	(void) TryExecuteOutputPin(ResultOutputName);
+	(void) TryExecuteOutputPin(ResultOutputName, FlowParameter);
 }
 
-bool UFlowNode_CallOwnerFunction::TryExecuteOutputPin(const FName& OutputName)
+bool UFlowNode_CallOwnerFunction::TryExecuteOutputPin(const FName& OutputName, const FFlowParameter &FlowParameter)
 {
 	if (OutputName.IsNone())
 	{
@@ -73,7 +73,7 @@ bool UFlowNode_CallOwnerFunction::TryExecuteOutputPin(const FName& OutputName)
 	}
 
 	const bool bFinish = ShouldFinishForOutputName(OutputName);
-	TriggerOutput(OutputName, bFinish);
+	TriggerOutput(OutputName, bFinish, EFlowPinActivationType::Default, FlowParameter);
 
 	return true;
 }

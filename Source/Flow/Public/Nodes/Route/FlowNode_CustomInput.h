@@ -16,7 +16,7 @@ class FLOW_API UFlowNode_CustomInput : public UFlowNode_CustomEventBase
 	friend class UFlowAsset;
 
 protected:
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 
 #if WITH_EDITOR
 public:

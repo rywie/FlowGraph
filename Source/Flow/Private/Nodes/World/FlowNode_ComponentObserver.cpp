@@ -18,17 +18,19 @@ UFlowNode_ComponentObserver::UFlowNode_ComponentObserver(const FObjectInitialize
 	OutputPins = {FFlowPin(TEXT("Success")), FFlowPin(TEXT("Completed")), FFlowPin(TEXT("Stopped"))};
 }
 
-void UFlowNode_ComponentObserver::ExecuteInput(const FName& PinName)
+void UFlowNode_ComponentObserver::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (IdentityTags.IsValid())
 	{
 		if (PinName == TEXT("Start"))
 		{
+			CachedFlowParameter = FlowParameter;
+			
 			StartObserving();
 		}
 		else if (PinName == TEXT("Stop"))
 		{
-			TriggerOutput(TEXT("Stopped"), true);
+			TriggerOutput(TEXT("Stopped"), true, CachedFlowParameter);
 		}
 	}
 	else

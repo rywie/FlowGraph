@@ -20,7 +20,7 @@ UFlowNode_ExecutionMultiGate::UFlowNode_ExecutionMultiGate(const FObjectInitiali
 	AllowedSignalModes = {EFlowSignalMode::Enabled, EFlowSignalMode::Disabled};
 }
 
-void UFlowNode_ExecutionMultiGate::ExecuteInput(const FName& PinName)
+void UFlowNode_ExecutionMultiGate::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (PinName == DefaultInputPin.PinName)
 	{
@@ -61,7 +61,7 @@ void UFlowNode_ExecutionMultiGate::ExecuteInput(const FName& PinName)
 			}
 
 			Completed[Index] = true;
-			TriggerOutput(OutputPins[Index].PinName, false);
+			TriggerOutput(OutputPins[Index].PinName, false, EFlowPinActivationType::Default, FlowParameter);
 		}
 		else
 		{
@@ -76,7 +76,7 @@ void UFlowNode_ExecutionMultiGate::ExecuteInput(const FName& PinName)
 			NextOutput = ++NextOutput % OutputPins.Num();
 
 			Completed[CurrentOutput] = true;
-			TriggerOutput(OutputPins[CurrentOutput].PinName, false);
+			TriggerOutput(OutputPins[CurrentOutput].PinName, false, EFlowPinActivationType::Default, FlowParameter);
 		}
 
 		if (!Completed.Contains(false) && bLoop)

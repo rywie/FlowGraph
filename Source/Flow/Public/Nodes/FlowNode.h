@@ -10,6 +10,7 @@
 #include "FlowMessageLog.h"
 #include "FlowTypes.h"
 #include "Nodes/FlowPin.h"
+#include "Nodes/FlowParameter.h"
 #include "FlowNode.generated.h"
 
 class UFlowAsset;
@@ -302,28 +303,28 @@ protected:
 	void K2_OnActivate();
 
 	// Trigger execution of input pin
-	void TriggerInput(const FName& PinName, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);
+	void TriggerInput(const FName& PinName, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default, const FFlowParameter& FlowParameter = FFlowParameter());
 
 	// Method reacting on triggering Input pin
-	virtual void ExecuteInput(const FName& PinName);
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter());
 
 	// Event reacting on triggering Input pin
 	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Execute Input"))
-	void K2_ExecuteInput(const FName& PinName);
+	void K2_ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter());
 
 	// Simply trigger the first Output Pin, convenient to use if node has only one output
 	UFUNCTION(BlueprintCallable, Category = "FlowNode")
-	void TriggerFirstOutput(const bool bFinish);
+	void TriggerFirstOutput(const bool bFinish, const FFlowParameter &FlowParameter = FFlowParameter());
 
 	UFUNCTION(BlueprintCallable, Category = "FlowNode", meta = (HidePin = "bForcedActivation"))
-	void TriggerOutput(const FName& PinName, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);
+	void TriggerOutput(const FName& PinName, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default, const FFlowParameter &FlowParameter = FFlowParameter());
 
-	void TriggerOutput(const FString& PinName, const bool bFinish = false);
-	void TriggerOutput(const FText& PinName, const bool bFinish = false);
-	void TriggerOutput(const TCHAR* PinName, const bool bFinish = false);
+	void TriggerOutput(const FString& PinName, const bool bFinish = false, const FFlowParameter &FlowParameter = FFlowParameter());
+	void TriggerOutput(const FText& PinName, const bool bFinish = false, const FFlowParameter &FlowParameter = FFlowParameter());
+	void TriggerOutput(const TCHAR* PinName, const bool bFinish = false, const FFlowParameter &FlowParameter = FFlowParameter());
 
 	UFUNCTION(BlueprintCallable, Category = "FlowNode", meta = (HidePin = "ActivationType"))
-	void TriggerOutputPin(const FFlowOutputPinHandle Pin, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);
+	void TriggerOutputPin(const FFlowOutputPinHandle Pin, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default, const FFlowParameter &FlowParameter = FFlowParameter());
 
 	// Finish execution of node, it will call Cleanup
 	UFUNCTION(BlueprintCallable, Category = "FlowNode")

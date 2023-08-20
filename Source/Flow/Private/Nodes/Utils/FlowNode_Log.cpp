@@ -18,7 +18,7 @@ UFlowNode_Log::UFlowNode_Log(const FObjectInitializer& ObjectInitializer)
 #endif
 }
 
-void UFlowNode_Log::ExecuteInput(const FName& PinName)
+void UFlowNode_Log::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	switch (Verbosity)
 	{
@@ -48,7 +48,7 @@ void UFlowNode_Log::ExecuteInput(const FName& PinName)
 		GEngine->AddOnScreenDebugMessage(-1, Duration, TextColor, Message);
 	}
 
-	TriggerFirstOutput(true);
+	TriggerFirstOutput(true, FlowParameter);
 }
 
 #if WITH_EDITOR
