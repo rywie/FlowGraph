@@ -640,14 +640,14 @@ void UFlowAsset::PreStartFlow()
 #endif
 }
 
-void UFlowAsset::StartFlow()
+void UFlowAsset::StartFlow(const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	PreStartFlow();
 
 	if (UFlowNode* ConnectedEntryNode = GetDefaultEntryNode())
 	{
 		RecordedNodes.Add(ConnectedEntryNode);
-		ConnectedEntryNode->TriggerFirstOutput(true);
+		ConnectedEntryNode->TriggerFirstOutput(true, FlowParameter);
 	}
 }
 

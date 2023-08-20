@@ -34,6 +34,9 @@ private:
 	UPROPERTY(SaveGame)
 	FString SavedAssetInstanceName;
 
+	UPROPERTY(SaveGame)
+	FFlowParameter CachedFlowParameter;
+
 protected:
 	virtual bool CanBeAssetInstanced() const;
 	
