@@ -33,7 +33,7 @@ void UFlowNode_SubGraph::PreloadContent()
 {
 	if (CanBeAssetInstanced() && GetFlowSubsystem())
 	{
-		GetFlowSubsystem()->CreateSubFlow(this, FString(), true);
+		GetFlowSubsystem()->CreateSubFlow(this, FString(), true, CachedFlowParameter);
 	}
 }
 
@@ -64,9 +64,11 @@ void UFlowNode_SubGraph::ExecuteInput(const FName &PinName, const FFlowParameter
 	
 	if (PinName == TEXT("Start"))
 	{
+		CachedFlowParameter = FlowParameter;
+
 		if (GetFlowSubsystem())
 		{
-			GetFlowSubsystem()->CreateSubFlow(this);
+			GetFlowSubsystem()->CreateSubFlow(this, FString(), false, CachedFlowParameter);
 		}
 	}
 	else if (!PinName.IsNone())

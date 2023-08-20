@@ -312,7 +312,7 @@ public:
 	virtual void PreloadNodes() {}
 
 	virtual void PreStartFlow();
-	virtual void StartFlow();
+	virtual void StartFlow(const FFlowParameter &FlowParameter = FFlowParameter());
 
 	virtual void FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool bRemoveInstance = true);
 
