@@ -15,13 +15,13 @@ UFlowNode_LogicalAND::UFlowNode_LogicalAND(const FObjectInitializer& ObjectIniti
 	SetNumberedInputPins(0, 1);
 }
 
-void UFlowNode_LogicalAND::ExecuteInput(const FName& PinName)
+void UFlowNode_LogicalAND::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	ExecutedInputNames.Add(PinName);
 
 	if (ExecutedInputNames.Num() == InputPins.Num())
 	{
-		TriggerFirstOutput(true);
+		TriggerFirstOutput(true, FlowParameter);
 	}
 }
 

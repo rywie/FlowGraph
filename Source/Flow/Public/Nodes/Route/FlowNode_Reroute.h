@@ -14,5 +14,5 @@ class FLOW_API UFlowNode_Reroute final : public UFlowNode
 	GENERATED_UCLASS_BODY()
 	
 protected:
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 };

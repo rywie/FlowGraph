@@ -15,8 +15,10 @@ UFlowNode_Checkpoint::UFlowNode_Checkpoint(const FObjectInitializer& ObjectIniti
 #endif
 }
 
-void UFlowNode_Checkpoint::ExecuteInput(const FName& PinName)
+void UFlowNode_Checkpoint::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
+	CachedFlowParameter = FlowParameter;
+
 	if (GetFlowSubsystem())
 	{
 		UFlowSaveGame* NewSaveGame = Cast<UFlowSaveGame>(UGameplayStatics::CreateSaveGameObject(UFlowSaveGame::StaticClass()));
@@ -25,10 +27,10 @@ void UFlowNode_Checkpoint::ExecuteInput(const FName& PinName)
 		UGameplayStatics::SaveGameToSlot(NewSaveGame, NewSaveGame->SaveSlotName, 0);
 	}
 
-	TriggerFirstOutput(true);
+	TriggerFirstOutput(true, CachedFlowParameter);
 }
 
 void UFlowNode_Checkpoint::OnLoad_Implementation()
 {
-	TriggerFirstOutput(true);
+	TriggerFirstOutput(true, CachedFlowParameter);
 }

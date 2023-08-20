@@ -20,7 +20,7 @@ UFlowNode_LogicalOR::UFlowNode_LogicalOR(const FObjectInitializer& ObjectInitial
 	InputPins.Add(FFlowPin(TEXT("Disable"), TEXT("Disabling resets Execution Count")));
 }
 
-void UFlowNode_LogicalOR::ExecuteInput(const FName& PinName)
+void UFlowNode_LogicalOR::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (PinName == TEXT("Enable"))
 	{
@@ -50,7 +50,7 @@ void UFlowNode_LogicalOR::ExecuteInput(const FName& PinName)
 			bEnabled = false;
 		}
 
-		TriggerFirstOutput(true);
+		TriggerFirstOutput(true, FlowParameter);
 	}
 }
 

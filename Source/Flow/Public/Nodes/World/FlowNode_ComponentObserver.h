@@ -39,9 +39,12 @@ protected:
 	int32 SuccessCount;
 
 	TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<UFlowComponent>> RegisteredActors;
+	
+	UPROPERTY(SaveGame)
+	FFlowParameter CachedFlowParameter;
 
 protected:
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 	virtual void OnLoad_Implementation() override;
 
 	virtual void StartObserving();

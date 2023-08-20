@@ -338,16 +338,16 @@ public:
 	virtual void FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool bRemoveInstance = true);
 
 	bool HasStartedFlow() const;
-	void TriggerCustomInput(const FName& EventName);
+	void TriggerCustomInput(const FName& EventName, const FFlowParameter &FlowParameter = FFlowParameter());
 
 	// Get Flow Asset instance created by the given SubGraph node
 	TWeakObjectPtr<UFlowAsset> GetFlowInstance(UFlowNode_SubGraph* SubGraphNode) const;
 
 protected:
-	void TriggerCustomInput_FromSubGraph(UFlowNode_SubGraph* Node, const FName& EventName) const;
-	void TriggerCustomOutput(const FName& EventName);
+	void TriggerCustomInput_FromSubGraph(UFlowNode_SubGraph* Node, const FName& EventName, const FFlowParameter &FlowParameter = FFlowParameter()) const;
+	void TriggerCustomOutput(const FName& EventName, const FFlowParameter &FlowParameter = FFlowParameter());
 
-	void TriggerInput(const FGuid& NodeGuid, const FName& PinName);
+	void TriggerInput(const FGuid& NodeGuid, const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter());
 
 	void FinishNode(UFlowNode* Node);
 	void ResetNodes();

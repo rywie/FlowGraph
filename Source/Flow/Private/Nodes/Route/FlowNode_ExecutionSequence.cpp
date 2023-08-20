@@ -17,9 +17,11 @@ UFlowNode_ExecutionSequence::UFlowNode_ExecutionSequence(const FObjectInitialize
 	AllowedSignalModes = {EFlowSignalMode::Enabled, EFlowSignalMode::Disabled};
 }
 
-void UFlowNode_ExecutionSequence::ExecuteInput(const FName& PinName)
+void UFlowNode_ExecutionSequence::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
-	if (bSavePinExecutionState)
+	CachedFlowParameter = FlowParameter;
+
+	if(bSavePinExecutionState)
 	{
 		ExecuteNewConnections();
 	}
@@ -27,7 +29,7 @@ void UFlowNode_ExecutionSequence::ExecuteInput(const FName& PinName)
 	{
 		for (const FFlowPin& Output : OutputPins)
 		{
-			TriggerOutput(Output.PinName, false);
+			TriggerOutput(Output.PinName, false, CachedFlowParameter);
 		}
 
 		Finish();
@@ -52,7 +54,7 @@ void UFlowNode_ExecutionSequence::ExecuteNewConnections()
 		if (!ExecutedConnections.Contains(Connection.NodeGuid))
 		{
 			ExecutedConnections.Emplace(Connection.NodeGuid);
-			TriggerOutput(Output.PinName, false);
+			TriggerOutput(Output.PinName, false, EFlowPinActivationType::Default, CachedFlowParameter);
 		}
 	}
 

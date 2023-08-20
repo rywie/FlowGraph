@@ -20,7 +20,7 @@ UFlowNode_NotifyActor::UFlowNode_NotifyActor(const FObjectInitializer& ObjectIni
 #endif
 }
 
-void UFlowNode_NotifyActor::ExecuteInput(const FName& PinName)
+void UFlowNode_NotifyActor::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (const UFlowSubsystem* FlowSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UFlowSubsystem>())
 	{
@@ -30,7 +30,7 @@ void UFlowNode_NotifyActor::ExecuteInput(const FName& PinName)
 		}
 	}
 
-	TriggerFirstOutput(true);
+	TriggerFirstOutput(true, FlowParameter);
 }
 
 #if WITH_EDITOR

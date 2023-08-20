@@ -22,7 +22,7 @@ private:
 	int32 CurrentSum;
 
 protected:
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 	virtual void Cleanup() override;
 
 #if WITH_EDITOR

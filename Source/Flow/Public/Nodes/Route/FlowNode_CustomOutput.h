@@ -15,7 +15,7 @@ class FLOW_API UFlowNode_CustomOutput final : public UFlowNode_CustomEventBase
 	GENERATED_UCLASS_BODY()
 
 protected:
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 
 #if WITH_EDITOR
 	virtual FText GetNodeTitle() const override;

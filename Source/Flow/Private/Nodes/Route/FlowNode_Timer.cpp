@@ -29,7 +29,7 @@ UFlowNode_Timer::UFlowNode_Timer(const FObjectInitializer& ObjectInitializer)
 	OutputPins.Add(FFlowPin(TEXT("Skipped")));
 }
 
-void UFlowNode_Timer::ExecuteInput(const FName& PinName)
+void UFlowNode_Timer::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (PinName == TEXT("In"))
 	{
@@ -39,11 +39,11 @@ void UFlowNode_Timer::ExecuteInput(const FName& PinName)
 			return;
 		}
 
-		SetTimer();
+		SetTimer(FlowParameter);
 	}
 	else if (PinName == TEXT("Skip"))
 	{
-		TriggerOutput(TEXT("Skipped"), true);
+		TriggerOutput(TEXT("Skipped"), true, FlowParameter);
 	}
 	else if (PinName == TEXT("Restart"))
 	{
@@ -51,10 +51,12 @@ void UFlowNode_Timer::ExecuteInput(const FName& PinName)
 	}
 }
 
-void UFlowNode_Timer::SetTimer()
+void UFlowNode_Timer::SetTimer(const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (GetWorld())
 	{
+		CachedFlowParameter = FlowParameter;
+
 		if (StepTime > 0.0f)
 		{
 			GetWorld()->GetTimerManager().SetTimer(StepTimerHandle, this, &UFlowNode_Timer::OnStep, StepTime, true);
@@ -72,7 +74,7 @@ void UFlowNode_Timer::SetTimer()
 	else
 	{
 		LogError(TEXT("No valid world"));
-		TriggerOutput(TEXT("Completed"), true);
+		TriggerOutput(TEXT("Completed"), true, FlowParameter);
 	}
 }
 
@@ -88,21 +90,31 @@ void UFlowNode_Timer::Restart()
 
 void UFlowNode_Timer::OnStep()
 {
+	OnParameterStep(CachedFlowParameter);
+}
+
+void UFlowNode_Timer::OnParameterStep(const FFlowParameter &FlowParameter)
+{
 	SumOfSteps += StepTime;
 
 	if (SumOfSteps >= CompletionTime)
 	{
-		TriggerOutput(TEXT("Completed"), true);
+		TriggerOutput(TEXT("Completed"), true, FlowParameter);
 	}
 	else
 	{
-		TriggerOutput(TEXT("Step"));
+		TriggerOutput(TEXT("Step"), false, FlowParameter);
 	}
 }
 
 void UFlowNode_Timer::OnCompletion()
 {
-	TriggerOutput(TEXT("Completed"), true);
+	OnParameterCompletion(CachedFlowParameter);
+}
+
+void UFlowNode_Timer::OnParameterCompletion(const FFlowParameter &FlowParameter)
+{
+	TriggerOutput(TEXT("Completed"), true, FlowParameter);
 }
 
 void UFlowNode_Timer::Cleanup()
@@ -111,15 +123,19 @@ void UFlowNode_Timer::Cleanup()
 	{
 		GetWorld()->GetTimerManager().ClearTimer(CompletionTimerHandle);
 	}
+
 	CompletionTimerHandle.Invalidate();
 
 	if (GetWorld())
 	{
 		GetWorld()->GetTimerManager().ClearTimer(StepTimerHandle);
 	}
+
 	StepTimerHandle.Invalidate();
 
 	SumOfSteps = 0.0f;
+
+	CachedFlowParameter = FFlowParameter();
 }
 
 void UFlowNode_Timer::OnSave_Implementation()

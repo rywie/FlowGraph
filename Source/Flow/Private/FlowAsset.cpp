@@ -697,32 +697,32 @@ TWeakObjectPtr<UFlowAsset> UFlowAsset::GetFlowInstance(UFlowNode_SubGraph* SubGr
 	return ActiveSubGraphs.FindRef(SubGraphNode);
 }
 
-void UFlowAsset::TriggerCustomInput_FromSubGraph(UFlowNode_SubGraph* Node, const FName& EventName) const
+void UFlowAsset::TriggerCustomInput_FromSubGraph(UFlowNode_SubGraph* Node, const FName& EventName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/) const
 {
 	const TWeakObjectPtr<UFlowAsset> FlowInstance = ActiveSubGraphs.FindRef(Node);
 	if (FlowInstance.IsValid())
 	{
-		FlowInstance->TriggerCustomInput(EventName);
+		FlowInstance->TriggerCustomInput(EventName, FlowParameter);
 	}
 }
 
-void UFlowAsset::TriggerCustomInput(const FName& EventName)
+void UFlowAsset::TriggerCustomInput(const FName& EventName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	for (UFlowNode_CustomInput* CustomInput : CustomInputNodes)
 	{
 		if (CustomInput->EventName == EventName)
 		{
 			RecordedNodes.Add(CustomInput);
-			CustomInput->ExecuteInput(EventName);
+			CustomInput->ExecuteInput(EventName, FlowParameter);
 		}
 	}
 }
 
-void UFlowAsset::TriggerCustomOutput(const FName& EventName)
+void UFlowAsset::TriggerCustomOutput(const FName& EventName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (NodeOwningThisAssetInstance.IsValid()) // it's a SubGraph
 	{
-		NodeOwningThisAssetInstance->TriggerOutput(EventName);
+		NodeOwningThisAssetInstance->TriggerOutput(EventName, false, EFlowPinActivationType::Default, FlowParameter);
 	}
 	else // it's a Root Flow, so the intention here might be to call event on the Flow Component
 	{
@@ -733,7 +733,7 @@ void UFlowAsset::TriggerCustomOutput(const FName& EventName)
 	}
 }
 
-void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName)
+void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (UFlowNode* Node = Nodes.FindRef(NodeGuid))
 	{
@@ -743,7 +743,7 @@ void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName)
 			RecordedNodes.Add(Node);
 		}
 
-		Node->TriggerInput(PinName);
+		Node->TriggerInput(PinName, EFlowPinActivationType::Default, FlowParameter);
 	}
 }
 

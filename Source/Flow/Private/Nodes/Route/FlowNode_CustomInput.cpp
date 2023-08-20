@@ -13,9 +13,9 @@ UFlowNode_CustomInput::UFlowNode_CustomInput(const FObjectInitializer& ObjectIni
 	InputPins.Empty();
 }
 
-void UFlowNode_CustomInput::ExecuteInput(const FName& PinName)
+void UFlowNode_CustomInput::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
-	TriggerFirstOutput(true);
+	TriggerFirstOutput(true, FlowParameter);
 }
 
 #if WITH_EDITOR

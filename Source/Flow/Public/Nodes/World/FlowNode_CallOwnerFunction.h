@@ -25,6 +25,28 @@ class FLOW_API UFlowNode_CallOwnerFunction : public UFlowNode
 	GENERATED_UCLASS_BODY()
 
 protected:
+
+#if WITH_EDITOR
+	// returns true if the InOutPins array was rebuilt
+	bool RebuildPinArray(const TArray<FName>& NewPinNames, TArray<FFlowPin>& InOutPins, const FFlowPin& DefaultPin);
+
+	void OnChangedParamsObject();
+#endif // WITH_EDITOR
+
+	//Begin UFlowNode protected
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
+	//End UFlowNode protected
+
+	bool ShouldFinishForOutputName(const FName& OutputName) const;
+	bool TryExecuteOutputPin(const FName& OutputName, const FFlowParameter &FlowParameter);
+
+	bool TryAllocateParamsInstance();
+
+	// Helper function for DoesFunctionHaveValidFlowOwnerFunctionSignature()
+	static bool DoesFunctionHaveNameReturnType(const UFunction& Function);
+
+protected:
+
 	// Function reference on the expected owner to call
 	UPROPERTY(EditAnywhere, Category = "Call Owner", meta = (DisplayName = "Function"))
 	FFlowOwnerFunctionRef FunctionRef;
@@ -32,14 +54,6 @@ protected:
 	// Parameter object to pass to the function when called
 	UPROPERTY(EditAnywhere, Category = "Call Owner", Instanced)
 	UFlowOwnerFunctionParams* Params;
-
-protected:
-	// UFlowNode
-	virtual void ExecuteInput(const FName& PinName) override;
-	// ---
-
-	bool TryExecuteOutputPin(const FName& OutputName);
-	bool ShouldFinishForOutputName(const FName& OutputName) const;
 
 #if WITH_EDITOR
 

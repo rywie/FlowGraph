@@ -14,7 +14,7 @@ UFlowNode_Reroute::UFlowNode_Reroute(const FObjectInitializer& ObjectInitializer
 	AllowedSignalModes = {EFlowSignalMode::Enabled, EFlowSignalMode::Disabled};
 }
 
-void UFlowNode_Reroute::ExecuteInput(const FName& PinName)
+void UFlowNode_Reroute::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
-	TriggerFirstOutput(true);
+	TriggerFirstOutput(true, FlowParameter);
 }

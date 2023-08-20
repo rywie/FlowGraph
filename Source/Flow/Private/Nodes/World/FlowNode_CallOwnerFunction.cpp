@@ -12,9 +12,8 @@
 
 #define LOCTEXT_NAMESPACE "FlowNode"
 
-UFlowNode_CallOwnerFunction::UFlowNode_CallOwnerFunction(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-	, Params(nullptr)
+UFlowNode_CallOwnerFunction::UFlowNode_CallOwnerFunction(const FObjectInitializer &ObjectInitializer)
+	: Super(ObjectInitializer), Params(nullptr)
 {
 #if WITH_EDITOR
 	NodeStyle = EFlowNodeStyle::Default;
@@ -22,9 +21,9 @@ UFlowNode_CallOwnerFunction::UFlowNode_CallOwnerFunction(const FObjectInitialize
 #endif
 }
 
-void UFlowNode_CallOwnerFunction::ExecuteInput(const FName& PinName)
+void UFlowNode_CallOwnerFunction::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
-	Super::ExecuteInput(PinName);
+	Super::ExecuteInput(PinName, FlowParameter);
 
 	if (!IsValid(Params))
 	{
@@ -33,7 +32,7 @@ void UFlowNode_CallOwnerFunction::ExecuteInput(const FName& PinName)
 		return;
 	}
 
-	IFlowOwnerInterface* FlowOwnerInterface = GetFlowOwnerInterface();
+	IFlowOwnerInterface *FlowOwnerInterface = GetFlowOwnerInterface();
 	if (!FlowOwnerInterface)
 	{
 		UE_LOG(LogFlow, Error, TEXT("Expected an owner that implements the IFlowOwnerInterface"));
@@ -41,8 +40,8 @@ void UFlowNode_CallOwnerFunction::ExecuteInput(const FName& PinName)
 		return;
 	}
 
-	const UObject* FlowOwnerObject = CastChecked<UObject>(FlowOwnerInterface);
-	const UClass* FlowOwnerClass = FlowOwnerObject->GetClass();
+	const UObject *FlowOwnerObject = CastChecked<UObject>(FlowOwnerInterface);
+	const UClass *FlowOwnerClass = FlowOwnerObject->GetClass();
 	check(IsValid(FlowOwnerClass));
 
 	if (!FunctionRef.TryResolveFunction(*FlowOwnerClass))
@@ -63,10 +62,10 @@ void UFlowNode_CallOwnerFunction::ExecuteInput(const FName& PinName)
 
 	Params->PostExecute();
 
-	(void)TryExecuteOutputPin(ResultOutputName);
+	(void)TryExecuteOutputPin(ResultOutputName, FlowParameter);
 }
 
-bool UFlowNode_CallOwnerFunction::TryExecuteOutputPin(const FName& OutputName)
+bool UFlowNode_CallOwnerFunction::TryExecuteOutputPin(const FName &OutputName, const FFlowParameter &FlowParameter)
 {
 	if (OutputName.IsNone())
 	{
@@ -74,12 +73,12 @@ bool UFlowNode_CallOwnerFunction::TryExecuteOutputPin(const FName& OutputName)
 	}
 
 	const bool bFinish = ShouldFinishForOutputName(OutputName);
-	TriggerOutput(OutputName, bFinish);
+	TriggerOutput(OutputName, bFinish, EFlowPinActivationType::Default, FlowParameter);
 
 	return true;
 }
 
-bool UFlowNode_CallOwnerFunction::ShouldFinishForOutputName(const FName& OutputName) const
+bool UFlowNode_CallOwnerFunction::ShouldFinishForOutputName(const FName &OutputName) const
 {
 	if (ensure(IsValid(Params)))
 	{
@@ -95,12 +94,12 @@ void UFlowNode_CallOwnerFunction::PostLoad()
 {
 	Super::PostLoad();
 
-	FObjectPropertyBase* ParamsProperty = FindFProperty<FObjectPropertyBase>(GetClass(), GET_MEMBER_NAME_CHECKED(UFlowNode_CallOwnerFunction, Params));
+	FObjectPropertyBase *ParamsProperty = FindFProperty<FObjectPropertyBase>(GetClass(), GET_MEMBER_NAME_CHECKED(UFlowNode_CallOwnerFunction, Params));
 	check(ParamsProperty);
 
 	// NOTE (gtaylor) This fixes corruption in FlowNodes that could have been caused with
 	// a previous version of the code (which was inadvisedly calling SetPropertyClass)
-	// to restore the correct PropertyClass for this node.  
+	// to restore the correct PropertyClass for this node.
 	// (it could be removed in a future release, once all assets have been updated)
 	if (ParamsProperty->PropertyClass != UFlowOwnerFunctionParams::StaticClass())
 	{
@@ -108,7 +107,7 @@ void UFlowNode_CallOwnerFunction::PostLoad()
 	}
 }
 
-bool UFlowNode_CallOwnerFunction::CanEditChange(const FProperty* InProperty) const
+bool UFlowNode_CallOwnerFunction::CanEditChange(const FProperty *InProperty) const
 {
 	if (!Super::CanEditChange(InProperty))
 	{
@@ -125,7 +124,7 @@ bool UFlowNode_CallOwnerFunction::CanEditChange(const FProperty* InProperty) con
 	return true;
 }
 
-void UFlowNode_CallOwnerFunction::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+void UFlowNode_CallOwnerFunction::PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
@@ -156,8 +155,8 @@ bool UFlowNode_CallOwnerFunction::TryAllocateParamsInstance()
 		return false;
 	}
 
-	const UClass* ExistingParamsClass = GetExistingParamsClass();
-	const UClass* RequiredParamsClass = GetRequiredParamsClass();
+	const UClass *ExistingParamsClass = GetExistingParamsClass();
+	const UClass *RequiredParamsClass = GetRequiredParamsClass();
 
 	if (!IsValid(RequiredParamsClass))
 	{
@@ -182,9 +181,9 @@ bool UFlowNode_CallOwnerFunction::TryAllocateParamsInstance()
 	return true;
 }
 
-UClass* UFlowNode_CallOwnerFunction::GetRequiredParamsClass() const
+UClass *UFlowNode_CallOwnerFunction::GetRequiredParamsClass() const
 {
-	const UClass* ExpectedOwnerClass = TryGetExpectedOwnerClass();
+	const UClass *ExpectedOwnerClass = TryGetExpectedOwnerClass();
 	if (!IsValid(ExpectedOwnerClass))
 	{
 		return nullptr;
@@ -196,25 +195,25 @@ UClass* UFlowNode_CallOwnerFunction::GetRequiredParamsClass() const
 	{
 		return nullptr;
 	}
-	
-	UClass* RequiredParamsClass = GetParamsClassForFunctionName(*ExpectedOwnerClass, FunctionNameAsName);
+
+	UClass *RequiredParamsClass = GetParamsClassForFunctionName(*ExpectedOwnerClass, FunctionNameAsName);
 	return RequiredParamsClass;
 }
 
-UClass* UFlowNode_CallOwnerFunction::GetExistingParamsClass() const
+UClass *UFlowNode_CallOwnerFunction::GetExistingParamsClass() const
 {
 	if (!IsValid(Params))
 	{
 		return nullptr;
 	}
 
-	UClass* ExistingParamsClass = Params->GetClass();
+	UClass *ExistingParamsClass = Params->GetClass();
 	return ExistingParamsClass;
 }
 
-UClass* UFlowNode_CallOwnerFunction::GetParamsClassForFunctionName(const UClass& ExpectedOwnerClass, const FName& FunctionName)
+UClass *UFlowNode_CallOwnerFunction::GetParamsClassForFunctionName(const UClass &ExpectedOwnerClass, const FName &FunctionName)
 {
-	const UFunction* Function = ExpectedOwnerClass.FindFunctionByName(FunctionName);
+	const UFunction *Function = ExpectedOwnerClass.FindFunctionByName(FunctionName);
 	if (IsValid(Function))
 	{
 		return GetParamsClassForFunction(*Function);
@@ -249,7 +248,7 @@ FString UFlowNode_CallOwnerFunction::GetNodeDescription() const
 	return FunctionRef.FunctionName.ToString();
 }
 
-bool UFlowNode_CallOwnerFunction::IsAcceptableParamsPropertyClass(const UClass* ParamsClass) const
+bool UFlowNode_CallOwnerFunction::IsAcceptableParamsPropertyClass(const UClass *ParamsClass) const
 {
 	if (!IsValid(ParamsClass))
 	{
@@ -261,7 +260,7 @@ bool UFlowNode_CallOwnerFunction::IsAcceptableParamsPropertyClass(const UClass* 
 		return false;
 	}
 
-	const UClass* ExistingParamsClass = GetExistingParamsClass();
+	const UClass *ExistingParamsClass = GetExistingParamsClass();
 
 	if (IsValid(ExistingParamsClass) && ParamsClass != ExistingParamsClass)
 	{
@@ -271,9 +270,9 @@ bool UFlowNode_CallOwnerFunction::IsAcceptableParamsPropertyClass(const UClass* 
 	return true;
 }
 
-UClass* UFlowNode_CallOwnerFunction::TryGetExpectedOwnerClass() const
+UClass *UFlowNode_CallOwnerFunction::TryGetExpectedOwnerClass() const
 {
-	const UFlowAsset* FlowAsset = GetFlowAsset();
+	const UFlowAsset *FlowAsset = GetFlowAsset();
 	if (IsValid(FlowAsset))
 	{
 		return FlowAsset->GetExpectedOwnerClass();
@@ -282,7 +281,7 @@ UClass* UFlowNode_CallOwnerFunction::TryGetExpectedOwnerClass() const
 	return nullptr;
 }
 
-bool UFlowNode_CallOwnerFunction::DoesFunctionHaveValidFlowOwnerFunctionSignature(const UFunction& Function)
+bool UFlowNode_CallOwnerFunction::DoesFunctionHaveValidFlowOwnerFunctionSignature(const UFunction &Function)
 {
 	if (GetParamsClassForFunction(Function) == nullptr)
 	{
@@ -299,7 +298,7 @@ bool UFlowNode_CallOwnerFunction::DoesFunctionHaveValidFlowOwnerFunctionSignatur
 	return true;
 }
 
-bool UFlowNode_CallOwnerFunction::DoesFunctionHaveNameReturnType(const UFunction& Function)
+bool UFlowNode_CallOwnerFunction::DoesFunctionHaveNameReturnType(const UFunction &Function)
 {
 	checkf(Function.NumParms == 2, TEXT("This should have already been checked in DoesFunctionHaveValidFlowOwnerFunctionSignature()"));
 
@@ -313,12 +312,12 @@ bool UFlowNode_CallOwnerFunction::DoesFunctionHaveNameReturnType(const UFunction
 	return false;
 }
 
-UClass* UFlowNode_CallOwnerFunction::GetParamsClassForFunction(const UFunction& Function)
+UClass *UFlowNode_CallOwnerFunction::GetParamsClassForFunction(const UFunction &Function)
 {
 	if (Function.NumParms != 2)
 	{
 		// Flow Owner Functions expect exactly two parameters:
-		//  - FFlowOwnerFunctionParams* 
+		//  - FFlowOwnerFunctionParams*
 		//  - FName (return)
 		// See FFlowOwnerFunctionSignature
 
@@ -329,10 +328,10 @@ UClass* UFlowNode_CallOwnerFunction::GetParamsClassForFunction(const UFunction& 
 
 	while (Iterator && (Iterator->PropertyFlags & CPF_Parm))
 	{
-		const FObjectPropertyBase* Prop = *Iterator;
+		const FObjectPropertyBase *Prop = *Iterator;
 		check(Prop);
 
-		UClass* PropertyClass = Prop->PropertyClass;
+		UClass *PropertyClass = Prop->PropertyClass;
 
 		if (!IsValid(PropertyClass))
 		{
@@ -380,7 +379,7 @@ EDataValidationResult UFlowNode_CallOwnerFunction::ValidateNode()
 
 	checkf(bHasParams && bHasFunction, TEXT("This should be assured by the preceding logic"));
 
-	const UClass* ExpectedOwnerClass = TryGetExpectedOwnerClass();
+	const UClass *ExpectedOwnerClass = TryGetExpectedOwnerClass();
 	if (!IsValid(ExpectedOwnerClass))
 	{
 		ValidationLog.Error<UFlowNode>(TEXT("Invalid or null Expected Owner Class for this Flow Asset"), this);
@@ -389,7 +388,7 @@ EDataValidationResult UFlowNode_CallOwnerFunction::ValidateNode()
 	}
 
 	// Check if the function can be found on the expected owner
-	const UFunction* Function = FunctionRef.TryResolveFunction(*ExpectedOwnerClass);
+	const UFunction *Function = FunctionRef.TryResolveFunction(*ExpectedOwnerClass);
 	if (!IsValid(Function))
 	{
 		ValidationLog.Error<UFlowNode>(TEXT("Could not resolve function for flow owner"), this);
@@ -405,10 +404,10 @@ EDataValidationResult UFlowNode_CallOwnerFunction::ValidateNode()
 		return EDataValidationResult::Invalid;
 	}
 
-	const UClass* RequiredParamsClass = GetRequiredParamsClass();
+	const UClass *RequiredParamsClass = GetRequiredParamsClass();
 	checkf(IsValid(RequiredParamsClass), TEXT("GetRequiredParamsClass() cannot return null if DoesFunctionHaveValidFlowOwnerFunctionSignature() is true"));
 
-	const UClass* ExistingParamsClass = GetExistingParamsClass();
+	const UClass *ExistingParamsClass = GetExistingParamsClass();
 	checkf(IsValid(ExistingParamsClass), TEXT("This should be assured, if bHasParams == true"));
 
 	// Check if the params (existing) are compatible with the function's expected (required) params
@@ -426,18 +425,18 @@ TArray<FFlowPin> UFlowNode_CallOwnerFunction::GetContextInputs()
 {
 	// refresh Params, just in case function argument type was changed
 	TryAllocateParamsInstance();
-	
+
 	TArray<FFlowPin> Pins = {};
 
 	if (Params)
 	{
-		for (const FName& Name : Params->GetInputNames())
+		for (const FName &Name : Params->GetInputNames())
 		{
 			if (InputPins.Contains(Name))
 			{
 				continue;
 			}
-			
+
 			Pins.Emplace(Name);
 		}
 	}
@@ -448,18 +447,18 @@ TArray<FFlowPin> UFlowNode_CallOwnerFunction::GetContextOutputs()
 {
 	// refresh Params, just in case function argument type was changed
 	TryAllocateParamsInstance();
-	
+
 	TArray<FFlowPin> Pins = {};
 
 	if (Params)
 	{
-		for (const FName& Name : Params->GetOutputNames())
+		for (const FName &Name : Params->GetOutputNames())
 		{
 			if (OutputPins.Contains(Name))
 			{
 				continue;
 			}
-			
+
 			Pins.Emplace(Name);
 		}
 	}

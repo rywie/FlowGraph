@@ -169,10 +169,11 @@ void UFlowNode_PlayLevelSequence::CreatePlayer()
 	}
 }
 
-void UFlowNode_PlayLevelSequence::ExecuteInput(const FName& PinName)
+void UFlowNode_PlayLevelSequence::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (PinName == TEXT("Start"))
 	{
+		CachedFlowParameter = FlowParameter;
 		LoadedSequence = Sequence.LoadSynchronous();
 
 		if (GetFlowSubsystem()->GetWorld() && LoadedSequence)
@@ -181,7 +182,7 @@ void UFlowNode_PlayLevelSequence::ExecuteInput(const FName& PinName)
 
 			if (SequencePlayer)
 			{
-				TriggerOutput(TEXT("PreStart"));
+				TriggerOutput(TEXT("PreStart"), false, CachedFlowParameter);
 
 				SequencePlayer->OnFinished.AddDynamic(this, &UFlowNode_PlayLevelSequence::OnPlaybackFinished);
 
@@ -194,11 +195,11 @@ void UFlowNode_PlayLevelSequence::ExecuteInput(const FName& PinName)
 					SequencePlayer->Play();
 				}
 
-				TriggerOutput(TEXT("Started"));
+				TriggerOutput(TEXT("Started"), false, CachedFlowParameter);
 			}
 		}
 
-		TriggerFirstOutput(false);
+		TriggerFirstOutput(false, FlowParameter);
 	}
 	else if (PinName == TEXT("Stop"))
 	{
@@ -255,7 +256,7 @@ void UFlowNode_PlayLevelSequence::OnLoad_Implementation()
 
 void UFlowNode_PlayLevelSequence::TriggerEvent(const FString& EventName)
 {
-	TriggerOutput(*EventName, false);
+	TriggerOutput(*EventName, false, CachedFlowParameter);
 }
 
 void UFlowNode_PlayLevelSequence::OnTimeDilationUpdate(const float NewTimeDilation)
@@ -271,7 +272,7 @@ void UFlowNode_PlayLevelSequence::OnTimeDilationUpdate(const float NewTimeDilati
 
 void UFlowNode_PlayLevelSequence::OnPlaybackFinished()
 {
-	TriggerOutput(TEXT("Completed"), true);
+	TriggerOutput(TEXT("Completed"), true, CachedFlowParameter);
 }
 
 void UFlowNode_PlayLevelSequence::StopPlayback()
@@ -281,7 +282,7 @@ void UFlowNode_PlayLevelSequence::StopPlayback()
 		SequencePlayer->Stop();
 	}
 
-	TriggerOutput(TEXT("Stopped"), true);
+	TriggerOutput(TEXT("Stopped"), true, CachedFlowParameter);
 }
 
 void UFlowNode_PlayLevelSequence::Cleanup()

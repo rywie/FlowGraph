@@ -13,7 +13,6 @@ class FLOW_API UFlowNode_ExecutionSequence final : public UFlowNode
 {
 	GENERATED_UCLASS_BODY()
 
-protected:
 	/**
 	 * If enabled and the graph is saved during gameplay, this node
 	 * tracks and saves which pins it has executed.
@@ -35,9 +34,12 @@ public:
 #endif
 
 protected:
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 	virtual void OnLoad_Implementation() override;
 	virtual void Cleanup() override;
+	
+	UPROPERTY(SaveGame)
+	FFlowParameter CachedFlowParameter;
 
 	void ExecuteNewConnections();
 

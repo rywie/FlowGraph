@@ -81,6 +81,9 @@ protected:
 	UPROPERTY(SaveGame)
 	float TimeDilation;
 
+	UPROPERTY(SaveGame)
+	FFlowParameter CachedFlowParameter;
+	
 	FStreamableManager StreamableManager;
 
 public:
@@ -98,7 +101,7 @@ public:
 	void CreatePlayer();
 
 protected:
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 
 	virtual void OnSave_Implementation() override;
 	virtual void OnLoad_Implementation() override;

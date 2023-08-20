@@ -26,18 +26,18 @@ UFlowNode_Counter::UFlowNode_Counter(const FObjectInitializer& ObjectInitializer
 	OutputPins.Add(FFlowPin(TEXT("Skipped")));
 }
 
-void UFlowNode_Counter::ExecuteInput(const FName& PinName)
+void UFlowNode_Counter::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (PinName == TEXT("Increment"))
 	{
 		CurrentSum++;
 		if (CurrentSum == Goal)
 		{
-			TriggerOutput(TEXT("Goal"), true);
+			TriggerOutput(TEXT("Goal"), true, FlowParameter);
 		}
 		else
 		{
-			TriggerOutput(TEXT("Step"));
+			TriggerOutput(TEXT("Step"), false, FlowParameter);
 		}
 		return;
 	}
@@ -47,18 +47,18 @@ void UFlowNode_Counter::ExecuteInput(const FName& PinName)
 		CurrentSum--;
 		if (CurrentSum == 0)
 		{
-			TriggerOutput(TEXT("Zero"), true);
+			TriggerOutput(TEXT("Zero"), true, FlowParameter);
 		}
 		else
 		{
-			TriggerOutput(TEXT("Step"));
+			TriggerOutput(TEXT("Step"), false, FlowParameter);
 		}
 		return;
 	}
 
 	if (PinName == TEXT("Skip"))
 	{
-		TriggerOutput(TEXT("Skipped"), true);
+		TriggerOutput(TEXT("Skipped"), true, FlowParameter);
 	}
 }
 

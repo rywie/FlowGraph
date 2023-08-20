@@ -16,5 +16,5 @@ class FLOW_API UFlowNode_Finish : public UFlowNode
 
 protected:
 	virtual bool CanFinishGraph() const override { return true; }
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
 };
