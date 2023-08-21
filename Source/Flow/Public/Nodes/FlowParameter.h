@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FlowParameterHandle.h"
 
 #include "FlowParameter.generated.h"
 
@@ -11,16 +12,16 @@ struct FFlowParameter
 
 public:
 	FFlowParameter()
-		: Handle(-1)
+		: Handle(FFlowParameterHandle())
 	{
 	}
 
-	FFlowParameter(int32 InHandle)
+	FFlowParameter(FFlowParameterHandle InHandle)
 		: Handle(InHandle)
 	{
 	}
 
 public:
 	UPROPERTY()
-	int32 Handle;
+	FFlowParameterHandle Handle;
 };
