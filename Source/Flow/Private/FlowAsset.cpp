@@ -747,7 +747,7 @@ void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName, const
 	}
 }
 
-void UFlowAsset::FinishNode(UFlowNode* Node)
+void UFlowAsset::FinishNode(UFlowNode* Node, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	if (ActiveNodes.Contains(Node))
 	{
@@ -758,7 +758,7 @@ void UFlowAsset::FinishNode(UFlowNode* Node)
 		{
 			if (NodeOwningThisAssetInstance.IsValid())
 			{
-				NodeOwningThisAssetInstance.Get()->TriggerFirstOutput(true);
+				NodeOwningThisAssetInstance.Get()->TriggerFirstOutput(true, FlowParameter);
 			}
 			else
 			{

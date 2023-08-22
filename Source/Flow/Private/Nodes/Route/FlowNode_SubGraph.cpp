@@ -89,7 +89,7 @@ void UFlowNode_SubGraph::Cleanup()
 
 void UFlowNode_SubGraph::ForceFinishNode()
 {
-	TriggerFirstOutput(true);
+	TriggerFirstOutput(true, CachedFlowParameter);
 }
 
 void UFlowNode_SubGraph::OnLoad_Implementation()

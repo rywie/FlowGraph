@@ -336,7 +336,7 @@ protected:
 public:
 	// Finish execution of node, it will call Cleanup
 	UFUNCTION(BlueprintCallable, Category = "FlowNode")
-	void Finish();
+	void Finish(const FFlowParameter &FlowParameter = FFlowParameter());
 
 protected:
 	void Deactivate();

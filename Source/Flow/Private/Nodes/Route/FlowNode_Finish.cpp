@@ -19,5 +19,5 @@ UFlowNode_Finish::UFlowNode_Finish(const FObjectInitializer& ObjectInitializer)
 void UFlowNode_Finish::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	// this will call FinishFlow()
-	Finish();
+	Finish(FlowParameter);
 }
