@@ -328,7 +328,7 @@ protected:
 
 	void TriggerInput(const FGuid& NodeGuid, const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter());
 
-	void FinishNode(UFlowNode* Node);
+	void FinishNode(UFlowNode* Node, const FFlowParameter &FlowParameter = FFlowParameter());
 	void ResetNodes();
 
 public:

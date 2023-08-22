@@ -647,10 +647,10 @@ void UFlowNode::TriggerOutput(const TCHAR* PinName, const bool bFinish, const FF
 	TriggerOutput(FName(PinName), bFinish, EFlowPinActivationType::Default, FlowParameter);
 }
 
-void UFlowNode::Finish()
+void UFlowNode::Finish(const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
 {
 	Deactivate();
-	GetFlowAsset()->FinishNode(this);
+	GetFlowAsset()->FinishNode(this, FlowParameter);
 }
 
 void UFlowNode::Deactivate()
