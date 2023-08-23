@@ -16,7 +16,7 @@ public:
 	{
 	}
 
-	FFlowParameter(FFlowParameterHandle InHandle)
+	FFlowParameter(const FFlowParameterHandle &InHandle)
 		: Handle(InHandle)
 	{
 	}
