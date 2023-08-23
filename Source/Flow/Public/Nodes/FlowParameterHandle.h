@@ -5,14 +5,37 @@
 #include "FlowParameterHandle.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlowParameterHandle
+struct FLOW_API FFlowParameterHandle
 {
 	GENERATED_USTRUCT_BODY()
 
-public:
 	static FFlowParameterHandle GenerateNewHandle();
 
-	bool IsValidHandle() const;
+public:
+	bool IsValidHandle() const
+	{
+		return Handle != INDEX_NONE;
+	}
+
+	bool operator==(const FFlowParameterHandle &Other) const
+	{
+		return Handle == Other.Handle;
+	}
+
+	bool operator!=(const FFlowParameterHandle &Other) const
+	{
+		return Handle != Other.Handle;
+	}
+
+	friend uint32 GetTypeHash(const FFlowParameterHandle &SpecHandle)
+	{
+		return ::GetTypeHash(SpecHandle.Handle);
+	}
+
+	FString ToString() const
+	{
+		return IsValidHandle() ? FString::FromInt(Handle) : TEXT("Invalid");
+	}
 
 public:
 	FFlowParameterHandle()

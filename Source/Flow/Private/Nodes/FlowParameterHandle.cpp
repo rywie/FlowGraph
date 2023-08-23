@@ -10,8 +10,3 @@ FFlowParameterHandle FFlowParameterHandle::GenerateNewHandle()
 
 	return FlowParameterHandle;
 }
-
-bool FFlowParameterHandle::IsValidHandle() const
-{
-	return Handle != INDEX_NONE;
-}
