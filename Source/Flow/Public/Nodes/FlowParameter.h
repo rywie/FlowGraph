@@ -6,7 +6,7 @@
 #include "FlowParameter.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlowParameter
+struct FLOW_API FFlowParameter
 {
 	GENERATED_USTRUCT_BODY()
 
