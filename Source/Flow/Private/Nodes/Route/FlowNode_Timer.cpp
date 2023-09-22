@@ -19,6 +19,7 @@ UFlowNode_Timer::UFlowNode_Timer(const FObjectInitializer& ObjectInitializer)
 	Category = TEXT("Route");
 	NodeStyle = EFlowNodeStyle::Latent;
 #endif
+	bFinishFlow = true;
 
 	InputPins.Add(FFlowPin(TEXT("Skip")));
 	InputPins.Add(FFlowPin(TEXT("Restart")));
@@ -43,7 +44,7 @@ void UFlowNode_Timer::ExecuteInput(const FName &PinName, const FFlowParameter &F
 	}
 	else if (PinName == TEXT("Skip"))
 	{
-		TriggerOutput(TEXT("Skipped"), true, FlowParameter);
+		TriggerOutput(TEXT("Skipped"), bFinishFlow, FlowParameter);
 	}
 	else if (PinName == TEXT("Restart"))
 	{
@@ -74,7 +75,7 @@ void UFlowNode_Timer::SetTimer(const FFlowParameter &FlowParameter /*= FFlowPara
 	else
 	{
 		LogError(TEXT("No valid world"));
-		TriggerOutput(TEXT("Completed"), true, FlowParameter);
+		TriggerOutput(TEXT("Completed"), bFinishFlow, FlowParameter);
 	}
 }
 
@@ -99,7 +100,7 @@ void UFlowNode_Timer::OnParameterStep(const FFlowParameter &FlowParameter)
 
 	if (SumOfSteps >= CompletionTime)
 	{
-		TriggerOutput(TEXT("Completed"), true, FlowParameter);
+		TriggerOutput(TEXT("Completed"), bFinishFlow, FlowParameter);
 	}
 	else
 	{
@@ -114,7 +115,7 @@ void UFlowNode_Timer::OnCompletion()
 
 void UFlowNode_Timer::OnParameterCompletion(const FFlowParameter &FlowParameter)
 {
-	TriggerOutput(TEXT("Completed"), true, FlowParameter);
+	TriggerOutput(TEXT("Completed"), bFinishFlow, FlowParameter);
 }
 
 void UFlowNode_Timer::Cleanup()

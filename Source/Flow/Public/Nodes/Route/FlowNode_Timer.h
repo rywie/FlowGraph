@@ -23,6 +23,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Timer", meta = (ClampMin = 0.0f))
 	float StepTime;
 
+	UPROPERTY(EditAnywhere, Category = "Timer")
+	bool bFinishFlow;
+
 private:
 	FTimerHandle CompletionTimerHandle;
 	FTimerHandle StepTimerHandle;
