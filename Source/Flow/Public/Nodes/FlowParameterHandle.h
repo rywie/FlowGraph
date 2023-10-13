@@ -48,6 +48,5 @@ public:
 	}
 
 public:
-	UPROPERTY()
 	int32 Handle;
 };
