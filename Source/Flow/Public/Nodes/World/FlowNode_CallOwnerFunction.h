@@ -11,7 +11,7 @@ class UFlowOwnerFunctionParams;
 class IFlowOwnerInterface;
 
 // Example signature for valid Flow Owner Functions
-typedef TFunction<FName(UFlowOwnerFunctionParams* Params)> FFlowOwnerFunctionSignature;
+typedef TFunction<FName(UFlowOwnerFunctionParams *Params)> FFlowOwnerFunctionSignature;
 
 /**
  * FlowNode to call an owner function
@@ -25,35 +25,21 @@ class FLOW_API UFlowNode_CallOwnerFunction : public UFlowNode
 	GENERATED_UCLASS_BODY()
 
 protected:
-
-#if WITH_EDITOR
-	// returns true if the InOutPins array was rebuilt
-	bool RebuildPinArray(const TArray<FName>& NewPinNames, TArray<FFlowPin>& InOutPins, const FFlowPin& DefaultPin);
-
-	void OnChangedParamsObject();
-#endif // WITH_EDITOR
-
-	//Begin UFlowNode protected
-	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
-	//End UFlowNode protected
-
-	bool ShouldFinishForOutputName(const FName& OutputName) const;
-	bool TryExecuteOutputPin(const FName& OutputName, const FFlowParameter &FlowParameter);
-
-	bool TryAllocateParamsInstance();
-
-	// Helper function for DoesFunctionHaveValidFlowOwnerFunctionSignature()
-	static bool DoesFunctionHaveNameReturnType(const UFunction& Function);
-
-protected:
-
 	// Function reference on the expected owner to call
 	UPROPERTY(EditAnywhere, Category = "Call Owner", meta = (DisplayName = "Function"))
 	FFlowOwnerFunctionRef FunctionRef;
 
 	// Parameter object to pass to the function when called
 	UPROPERTY(EditAnywhere, Category = "Call Owner", Instanced)
-	UFlowOwnerFunctionParams* Params;
+	UFlowOwnerFunctionParams *Params;
+
+protected:
+	// UFlowNode
+	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
+	// ---
+
+	bool ShouldFinishForOutputName(const FName &OutputName) const;
+	bool TryExecuteOutputPin(const FName &OutputName, const FFlowParameter &FlowParameter);
 
 #if WITH_EDITOR
 
@@ -71,27 +57,27 @@ public:
 
 	// UObject
 	virtual void PostLoad() override;
-	virtual bool CanEditChange(const FProperty* InProperty) const override;
-	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+	virtual bool CanEditChange(const FProperty *InProperty) const override;
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent &PropertyChangedEvent) override;
 	// ---
 
 protected:
 	bool TryAllocateParamsInstance();
 
-	UClass* GetRequiredParamsClass() const;
-	UClass* GetExistingParamsClass() const;
+	UClass *GetRequiredParamsClass() const;
+	UClass *GetExistingParamsClass() const;
 
-	static UClass* GetParamsClassForFunctionName(const UClass& ExpectedOwnerClass, const FName& FunctionName);
-	static UClass* GetParamsClassForFunction(const UFunction& Function);
+	static UClass *GetParamsClassForFunctionName(const UClass &ExpectedOwnerClass, const FName &FunctionName);
+	static UClass *GetParamsClassForFunction(const UFunction &Function);
 
 public:
-	bool IsAcceptableParamsPropertyClass(const UClass* ParamsClass) const;
+	bool IsAcceptableParamsPropertyClass(const UClass *ParamsClass) const;
 
-	UClass* TryGetExpectedOwnerClass() const;
-	static bool DoesFunctionHaveValidFlowOwnerFunctionSignature(const UFunction& Function);
+	UClass *TryGetExpectedOwnerClass() const;
+	static bool DoesFunctionHaveValidFlowOwnerFunctionSignature(const UFunction &Function);
 
 protected:
 	// Helper function for DoesFunctionHaveValidFlowOwnerFunctionSignature()
-	static bool DoesFunctionHaveNameReturnType(const UFunction& Function);
+	static bool DoesFunctionHaveNameReturnType(const UFunction &Function);
 #endif // WITH_EDITOR
 };

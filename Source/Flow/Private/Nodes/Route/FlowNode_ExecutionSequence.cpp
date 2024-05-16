@@ -29,7 +29,7 @@ void UFlowNode_ExecutionSequence::ExecuteInput(const FName &PinName, const FFlow
 	{
 		for (const FFlowPin& Output : OutputPins)
 		{
-			TriggerOutput(Output.PinName, false, CachedFlowParameter);
+			TriggerOutput(Output.PinName, false, EFlowPinActivationType::Default, CachedFlowParameter);
 		}
 
 		Finish();
