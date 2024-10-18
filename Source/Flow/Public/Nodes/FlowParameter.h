@@ -12,16 +12,24 @@ struct FLOW_API FFlowParameter
 
 public:
 	FFlowParameter()
-		: Handle(FFlowParameterHandle())
+		: Handle(FFlowParameterHandle()), FlowPath(NAME_None)
 	{
 	}
 
-	FFlowParameter(const FFlowParameterHandle &InHandle)
-		: Handle(InHandle)
+	FFlowParameter(const FFlowParameterHandle& InHandle)
+		: Handle(InHandle), FlowPath(NAME_None)
+	{
+	}
+
+	FFlowParameter(const FFlowParameterHandle& InHandle, const FName& InFlowPath)
+		: Handle(InHandle), FlowPath(InFlowPath)
 	{
 	}
 
 public:
 	UPROPERTY()
 	FFlowParameterHandle Handle;
+
+	UPROPERTY()
+	FName FlowPath;
 };

@@ -6,7 +6,7 @@
 FFlowParameterHandle FFlowParameterHandle::GenerateNewHandle()
 {
 	static int32 GHandleID = 0;
-	FFlowParameterHandle FlowParameterHandle(GHandleID++);
+	FFlowParameterHandle FlowParameterHandle(GHandleID = (GHandleID + 1) % INT_MAX);
 
 	return FlowParameterHandle;
 }
