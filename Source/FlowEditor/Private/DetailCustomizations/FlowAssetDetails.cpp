@@ -2,7 +2,7 @@
 
 #include "DetailCustomizations/FlowAssetDetails.h"
 #include "FlowAsset.h"
-#include "Nodes/Route/FlowNode_SubGraph.h"
+#include "Nodes/Route/FlowNode_AbstractSubGraph.h"
 
 #include "DetailLayoutBuilder.h"
 #include "PropertyCustomizationHelpers.h"
@@ -64,7 +64,7 @@ bool FFlowAssetDetails::VerifyNewCustomPinText(const FText& InNewText, FText& Ou
 {
 	const FName NewString = *InNewText.ToString();
 
-	if (NewString == UFlowNode_SubGraph::StartPin.PinName || NewString == UFlowNode_SubGraph::FinishPin.PinName)
+	if (NewString == UFlowNode_AbstractSubGraph::StartPin.PinName || NewString == UFlowNode_AbstractSubGraph::FinishPin.PinName)
 	{
 		OutErrorMessage = LOCTEXT("VerifyTextFailed", "This is a standard pin name of Sub Graph node!");
 		return false;

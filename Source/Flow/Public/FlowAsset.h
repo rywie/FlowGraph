@@ -15,7 +15,7 @@
 
 class UFlowNode_CustomOutput;
 class UFlowNode_CustomInput;
-class UFlowNode_SubGraph;
+class UFlowNode_AbstractSubGraph;
 class UFlowSubsystem;
 
 class UEdGraph;
@@ -28,11 +28,21 @@ class UFlowAsset;
 class FLOW_API IFlowGraphInterface
 {
 public:
-	IFlowGraphInterface() {}
-	virtual ~IFlowGraphInterface() {}
+	IFlowGraphInterface()
+	{
+	}
 
-	virtual void OnInputTriggered(UEdGraphNode* GraphNode, const int32 Index) const {}
-	virtual void OnOutputTriggered(UEdGraphNode* GraphNode, const int32 Index) const {}
+	virtual ~IFlowGraphInterface()
+	{
+	}
+
+	virtual void OnInputTriggered(UEdGraphNode* GraphNode, const int32 Index) const
+	{
+	}
+
+	virtual void OnOutputTriggered(UEdGraphNode* GraphNode, const int32 Index) const
+	{
+	}
 };
 
 DECLARE_DELEGATE(FFlowGraphEvent);
@@ -47,10 +57,10 @@ class FLOW_API UFlowAsset : public UObject
 {
 	GENERATED_UCLASS_BODY()
 
-public:	
+public:
 	friend class UFlowNode;
 	friend class UFlowNode_CustomOutput;
-	friend class UFlowNode_SubGraph;
+	friend class UFlowNode_AbstractSubGraph;
 	friend class UFlowSubsystem;
 
 	friend class FFlowAssetDetails;
@@ -65,8 +75,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flow Asset")
 	bool bWorldBound;
 
-//////////////////////////////////////////////////////////////////////////
-// Graph
+	//////////////////////////////////////////////////////////////////////////
+	// Graph
 
 #if WITH_EDITOR
 	friend class UFlowGraph;
@@ -111,8 +121,8 @@ public:
 #endif
 	// -- 
 
-//////////////////////////////////////////////////////////////////////////
-// Nodes
+	//////////////////////////////////////////////////////////////////////////
+	// Nodes
 
 protected:
 	TArray<TSubclassOf<UFlowNode>> AllowedNodeClasses;
@@ -120,7 +130,7 @@ protected:
 
 	TArray<TSubclassOf<UFlowNode>> AllowedInSubgraphNodeClasses;
 	TArray<TSubclassOf<UFlowNode>> DeniedInSubgraphNodeClasses;
-	
+
 	bool bStartNodePlacedAsGhostNode;
 
 private:
@@ -128,6 +138,7 @@ private:
 	TMap<FGuid, UFlowNode*> Nodes;
 
 #if WITH_EDITORONLY_DATA
+
 protected:
 	/**
 	 * Custom Inputs define custom entry points in graph, it's similar to blueprint Custom Events
@@ -211,7 +222,7 @@ protected:
 		}
 	}
 
-public:	
+public:
 	UFlowNode_CustomInput* TryFindCustomInputNodeByEventName(const FName& EventName) const;
 	UFlowNode_CustomOutput* TryFindCustomOutputNodeByEventName(const FName& EventName) const;
 
@@ -229,9 +240,9 @@ protected:
 	void AddCustomOutput(const FName& EventName);
 	void RemoveCustomOutput(const FName& EventName);
 #endif // WITH_EDITOR
-	
-//////////////////////////////////////////////////////////////////////////
-// Instances of the template asset
+
+	//////////////////////////////////////////////////////////////////////////
+	// Instances of the template asset
 
 private:
 	// Original object holds references to instances
@@ -274,8 +285,8 @@ private:
 	void BroadcastRuntimeMessageAdded(const TSharedRef<FTokenizedMessage>& Message);
 #endif
 
-//////////////////////////////////////////////////////////////////////////
-// Executing asset instance
+	//////////////////////////////////////////////////////////////////////////
+	// Executing asset instance
 
 protected:
 	UPROPERTY()
@@ -286,10 +297,10 @@ protected:
 	TWeakObjectPtr<UObject> Owner;
 
 	// SubGraph node that created this Flow Asset instance
-	TWeakObjectPtr<UFlowNode_SubGraph> NodeOwningThisAssetInstance;
+	TWeakObjectPtr<UFlowNode_AbstractSubGraph> NodeOwningThisAssetInstance;
 
 	// Flow Asset instances created by SubGraph nodes placed in the current graph
-	TMap<TWeakObjectPtr<UFlowNode_SubGraph>, TWeakObjectPtr<UFlowAsset>> ActiveSubGraphs;
+	TMap<TWeakObjectPtr<UFlowNode_AbstractSubGraph>, TWeakObjectPtr<UFlowAsset>> ActiveSubGraphs;
 
 	// Optional entry points to the graph, similar to blueprint Custom Events
 	UPROPERTY()
@@ -330,33 +341,38 @@ public:
 	AActor* TryFindActorOwner() const;
 
 	// Opportunity to preload content of project-specific nodes
-	virtual void PreloadNodes() {}
+	virtual void PreloadNodes()
+	{
+	}
 
 	virtual void PreStartFlow();
-	virtual void StartFlow(const FFlowParameter &FlowParameter = FFlowParameter());
+	virtual void StartFlow(const FFlowParameter& FlowParameter = FFlowParameter());
 
 	virtual void FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool bRemoveInstance = true);
 
 	bool HasStartedFlow() const;
-	void TriggerCustomInput(const FName& EventName, const FFlowParameter &FlowParameter = FFlowParameter());
+	void TriggerCustomInput(const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 
 	// Get Flow Asset instance created by the given SubGraph node
-	TWeakObjectPtr<UFlowAsset> GetFlowInstance(UFlowNode_SubGraph* SubGraphNode) const;
+	TWeakObjectPtr<UFlowAsset> GetFlowInstance(UFlowNode_AbstractSubGraph* SubGraphNode) const;
 
 protected:
-	void TriggerCustomInput_FromSubGraph(UFlowNode_SubGraph* Node, const FName& EventName, const FFlowParameter &FlowParameter = FFlowParameter()) const;
-	void TriggerCustomOutput(const FName& EventName, const FFlowParameter &FlowParameter = FFlowParameter());
+	void TriggerCustomInput_FromSubGraph(UFlowNode_AbstractSubGraph* Node, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter()) const;
+	void TriggerCustomOutput(const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 
 	void TriggerInput(const FGuid& NodeGuid, const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter());
 
-	void FinishNode(UFlowNode* Node, const FFlowParameter &FlowParameter = FFlowParameter());
+	void FinishNode(UFlowNode* Node, const FFlowParameter& FlowParameter = FFlowParameter());
+	void TriggerFinishOutput(UFlowNode* Node, const FFlowParameter& FlowParameter = FFlowParameter()) const;
+	void TriggerEntryInput(UFlowNode_AbstractSubGraph* SubGraphNode, const FFlowParameter& FlowParameter = FFlowParameter()) const;
+
 	void ResetNodes();
 
 public:
 	UFlowSubsystem* GetFlowSubsystem() const;
 	FName GetDisplayName() const;
 
-	UFlowNode_SubGraph* GetNodeOwningThisAssetInstance() const;
+	UFlowNode_AbstractSubGraph* GetNodeOwningThisAssetInstance() const;
 	UFlowAsset* GetParentInstance() const;
 
 	// Are there any active nodes?
@@ -371,8 +387,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Flow")
 	const TArray<UFlowNode*>& GetRecordedNodes() const { return RecordedNodes; }
 
-//////////////////////////////////////////////////////////////////////////
-// Expected Owner Class support (for use with CallOwnerFunction nodes)
+	//////////////////////////////////////////////////////////////////////////
+	// Expected Owner Class support (for use with CallOwnerFunction nodes)
 
 public:
 	UClass* GetExpectedOwnerClass() const { return ExpectedOwnerClass; }
@@ -384,8 +400,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Flow", meta = (MustImplement = "/Script/Flow.FlowOwnerInterface"))
 	TSubclassOf<UObject> ExpectedOwnerClass;
 
-//////////////////////////////////////////////////////////////////////////
-// SaveGame support
+	//////////////////////////////////////////////////////////////////////////
+	// SaveGame support
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "SaveGame")
@@ -407,10 +423,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	bool IsBoundToWorld();
 
-//////////////////////////////////////////////////////////////////////////
-// Utils
+	//////////////////////////////////////////////////////////////////////////
+	// Utils
 
 #if WITH_EDITOR
+
 public:
 	void LogError(const FString& MessageToLog, UFlowNode* Node);
 	void LogWarning(const FString& MessageToLog, UFlowNode* Node);

@@ -2,10 +2,12 @@
 
 #include "Nodes/Route/FlowNode_Finish.h"
 
+#include "FlowAsset.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlowNode_Finish)
 
 UFlowNode_Finish::UFlowNode_Finish(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+	: Super(ObjectInitializer), bTriggerFinish(true)
 {
 #if WITH_EDITOR
 	Category = TEXT("Route");
@@ -16,8 +18,19 @@ UFlowNode_Finish::UFlowNode_Finish(const FObjectInitializer& ObjectInitializer)
 	AllowedSignalModes = {EFlowSignalMode::Enabled, EFlowSignalMode::Disabled};
 }
 
-void UFlowNode_Finish::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowNode_Finish::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
-	// this will call FinishFlow()
-	Finish(FlowParameter);
+	const UFlowAsset* FlowAsset = GetFlowAsset();
+	check(IsValid(FlowAsset));
+
+	if (bTriggerFinish)
+	{
+		// this will call FinishFlow()
+		Finish(FlowParameter);
+	}
+	else
+	{
+		// this will tell the Flow Asset to emit the Finish Output through the owner Subgraph
+		TriggerFinishOutput(FlowParameter);
+	}
 }

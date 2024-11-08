@@ -6,7 +6,7 @@
 
 UFlowNode_ExecutionSequence::UFlowNode_ExecutionSequence(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, bSavePinExecutionState(true)
+	  , bSavePinExecutionState(true)
 {
 #if WITH_EDITOR
 	Category = TEXT("Route");
@@ -17,11 +17,11 @@ UFlowNode_ExecutionSequence::UFlowNode_ExecutionSequence(const FObjectInitialize
 	AllowedSignalModes = {EFlowSignalMode::Enabled, EFlowSignalMode::Disabled};
 }
 
-void UFlowNode_ExecutionSequence::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowNode_ExecutionSequence::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	CachedFlowParameter = FlowParameter;
 
-	if(bSavePinExecutionState)
+	if (bSavePinExecutionState)
 	{
 		ExecuteNewConnections();
 	}
@@ -38,7 +38,19 @@ void UFlowNode_ExecutionSequence::ExecuteInput(const FName &PinName, const FFlow
 
 void UFlowNode_ExecutionSequence::OnLoad_Implementation()
 {
-	ExecuteNewConnections();
+	if (bSavePinExecutionState)
+	{
+		ExecuteNewConnections();
+	}
+	else
+	{
+		for (const FFlowPin& Output : OutputPins)
+		{
+			TriggerOutput(Output.PinName, false, EFlowPinActivationType::Default, CachedFlowParameter);
+		}
+
+		Finish();
+	}
 }
 
 void UFlowNode_ExecutionSequence::Cleanup()

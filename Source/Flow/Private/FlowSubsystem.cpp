@@ -7,7 +7,7 @@
 #include "FlowLogChannels.h"
 #include "FlowSave.h"
 #include "FlowSettings.h"
-#include "Nodes/Route/FlowNode_SubGraph.h"
+#include "Nodes/Route/FlowNode_AbstractSubGraph.h"
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -76,7 +76,7 @@ void UFlowSubsystem::AbortActiveFlows()
 	RootInstances.Empty();
 }
 
-void UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances /* = true */, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances /* = true */, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (FlowAsset)
 	{
@@ -159,14 +159,15 @@ void UFlowSubsystem::FinishAllRootFlows(UObject* Owner, const EFlowFinishPolicy 
 	}
 }
 
-UFlowAsset* UFlowSubsystem::CreateSubFlow(UFlowNode_SubGraph* SubGraphNode, const FString SavedInstanceName, const bool bPreloading /* = false */, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+UFlowAsset* UFlowSubsystem::CreateSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const FString SavedInstanceName, const bool bPreloading /* = false */,
+                                          const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	UFlowAsset* NewInstance = nullptr;
 
 	if (!InstancedSubFlows.Contains(SubGraphNode))
 	{
 		const TWeakObjectPtr<UObject> Owner = SubGraphNode->GetFlowAsset() ? SubGraphNode->GetFlowAsset()->GetOwner() : nullptr;
-		NewInstance = CreateFlowInstance(Owner, SubGraphNode->Asset, SavedInstanceName);
+		NewInstance = CreateFlowInstance(Owner, SubGraphNode->GetSubAsset(), SavedInstanceName);
 
 		if (NewInstance)
 		{
@@ -197,7 +198,7 @@ UFlowAsset* UFlowSubsystem::CreateSubFlow(UFlowNode_SubGraph* SubGraphNode, cons
 	return NewInstance;
 }
 
-void UFlowSubsystem::RemoveSubFlow(UFlowNode_SubGraph* SubGraphNode, const EFlowFinishPolicy FinishPolicy)
+void UFlowSubsystem::RemoveSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const EFlowFinishPolicy FinishPolicy)
 {
 	if (InstancedSubFlows.Contains(SubGraphNode))
 	{
@@ -394,22 +395,22 @@ void UFlowSubsystem::LoadRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const F
 	}
 }
 
-void UFlowSubsystem::LoadSubFlow(UFlowNode_SubGraph* SubGraphNode, const FString& SavedAssetInstanceName)
+void UFlowSubsystem::LoadSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const FString& SavedAssetInstanceName)
 {
-	if (SubGraphNode->Asset.IsNull())
+	const TSoftObjectPtr<UFlowAsset> Asset = SubGraphNode->GetSubAsset();
+	if (Asset.IsNull())
 	{
 		return;
 	}
 
-	UFlowAsset* SubGraphAsset = SubGraphNode->Asset.LoadSynchronous();
+	UFlowAsset* SubGraphAsset = Asset.LoadSynchronous();
 
 	for (const FFlowAssetSaveData& AssetRecord : LoadedSaveGame->FlowInstances)
 	{
 		if (AssetRecord.InstanceName == SavedAssetInstanceName
 			&& ((SubGraphAsset && SubGraphAsset->IsBoundToWorld() == false) || AssetRecord.WorldName == GetWorld()->GetName()))
 		{
-			UFlowAsset* LoadedInstance = CreateSubFlow(SubGraphNode, SavedAssetInstanceName);
-			if (LoadedInstance)
+			if (UFlowAsset* LoadedInstance = CreateSubFlow(SubGraphNode, SavedAssetInstanceName))
 			{
 				LoadedInstance->LoadInstance(AssetRecord);
 			}
@@ -527,7 +528,8 @@ TSet<UFlowComponent*> UFlowSubsystem::GetFlowComponentsByTag(const FGameplayTag 
 	return Result;
 }
 
-TSet<UFlowComponent*> UFlowSubsystem::GetFlowComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<UFlowComponent> ComponentClass, const bool bExactMatch) const
+TSet<UFlowComponent*> UFlowSubsystem::GetFlowComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<UFlowComponent> ComponentClass,
+                                                              const bool bExactMatch) const
 {
 	TSet<TWeakObjectPtr<UFlowComponent>> FoundComponents;
 	FindComponents(Tags, MatchType, bExactMatch, FoundComponents);
@@ -595,7 +597,8 @@ TMap<AActor*, UFlowComponent*> UFlowSubsystem::GetFlowActorsAndComponentsByTag(c
 	return Result;
 }
 
-TMap<AActor*, UFlowComponent*> UFlowSubsystem::GetFlowActorsAndComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<AActor> ActorClass, const bool bExactMatch) const
+TMap<AActor*, UFlowComponent*> UFlowSubsystem::GetFlowActorsAndComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<AActor> ActorClass,
+                                                                                const bool bExactMatch) const
 {
 	TSet<TWeakObjectPtr<UFlowComponent>> FoundComponents;
 	FindComponents(Tags, MatchType, bExactMatch, FoundComponents);

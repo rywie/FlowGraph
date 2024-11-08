@@ -27,9 +27,9 @@ public:
 	}
 
 public:
-	UPROPERTY()
+	UPROPERTY(SaveGame)
 	FFlowParameterHandle Handle;
 
-	UPROPERTY()
+	UPROPERTY(SaveGame)
 	FName FlowPath;
 };

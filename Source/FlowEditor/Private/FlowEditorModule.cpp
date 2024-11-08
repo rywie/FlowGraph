@@ -26,7 +26,7 @@
 #include "FlowAsset.h"
 #include "Nodes/Route/FlowNode_CustomInput.h"
 #include "Nodes/Route/FlowNode_CustomOutput.h"
-#include "Nodes/Route/FlowNode_SubGraph.h"
+#include "Nodes/Route/FlowNode_AbstractSubGraph.h"
 #include "Nodes/World/FlowNode_ComponentObserver.h"
 #include "Nodes/World/FlowNode_PlayLevelSequence.h"
 
@@ -183,7 +183,7 @@ void FFlowEditorModule::RegisterDetailCustomizations()
 		RegisterCustomClassLayout(UFlowNode_CustomInput::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FFlowNode_CustomInputDetails::MakeInstance));
 		RegisterCustomClassLayout(UFlowNode_CustomOutput::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FFlowNode_CustomOutputDetails::MakeInstance));
 		RegisterCustomClassLayout(UFlowNode_PlayLevelSequence::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FFlowNode_PlayLevelSequenceDetails::MakeInstance));
-    RegisterCustomClassLayout(UFlowNode_SubGraph::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FFlowNode_SubGraphDetails::MakeInstance));
+		RegisterCustomClassLayout(UFlowNode_AbstractSubGraph::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FFlowNode_SubGraphDetails::MakeInstance));
 		RegisterCustomStructLayout(*FFlowOwnerFunctionRef::StaticStruct(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FFlowOwnerFunctionRefCustomization::MakeInstance));
 
 		PropertyModule.NotifyCustomizationModuleChanged();

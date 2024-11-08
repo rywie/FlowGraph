@@ -681,6 +681,11 @@ void UFlowNode::Finish(const FFlowParameter &FlowParameter /*= FFlowParameter()*
 	GetFlowAsset()->FinishNode(this, FlowParameter);
 }
 
+void UFlowNode::TriggerFinishOutput(const FFlowParameter& FlowParameter)
+{
+	GetFlowAsset()->TriggerFinishOutput(this, FlowParameter);
+}
+
 void UFlowNode::Deactivate()
 {
 	if (GetFlowAsset()->FinishPolicy == EFlowFinishPolicy::Abort)

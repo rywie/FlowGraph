@@ -9,7 +9,7 @@
 #include "Nodes/Route/FlowNode_CustomInput.h"
 #include "Nodes/Route/FlowNode_CustomOutput.h"
 #include "Nodes/Route/FlowNode_Start.h"
-#include "Nodes/Route/FlowNode_SubGraph.h"
+#include "Nodes/Route/FlowNode_AbstractSubGraph.h"
 
 #include "Engine/World.h"
 #include "Serialization/MemoryReader.h"
@@ -32,15 +32,15 @@ FString UFlowAsset::ValidationError_NullNodeInstance = TEXT("Node with GUID {0} 
 
 UFlowAsset::UFlowAsset(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, bWorldBound(true)
+	  , bWorldBound(true)
 #if WITH_EDITOR
-	, FlowGraph(nullptr)
+	  , FlowGraph(nullptr)
 #endif
-	, AllowedNodeClasses({UFlowNode::StaticClass()})
-	, AllowedInSubgraphNodeClasses({UFlowNode_SubGraph::StaticClass()})
-	, bStartNodePlacedAsGhostNode(false)
-	, TemplateAsset(nullptr)
-	, FinishPolicy(EFlowFinishPolicy::Keep)
+	  , AllowedNodeClasses({UFlowNode::StaticClass()})
+	  , AllowedInSubgraphNodeClasses({UFlowNode_AbstractSubGraph::StaticClass()})
+	  , bStartNodePlacedAsGhostNode(false)
+	  , TemplateAsset(nullptr)
+	  , FinishPolicy(EFlowFinishPolicy::Keep)
 {
 	if (!AssetGuid.IsValid())
 	{
@@ -88,7 +88,7 @@ void UFlowAsset::PostLoad()
 	// If we removed or moved a flow node blueprint (and there is no redirector) we might loose the reference to it resulting
 	// in null pointers in the Nodes FGUID->UFlowNode* Map. So here we iterate over all the Nodes and remove all pairs that
 	// are nulled out.
-	
+
 	TSet<FGuid> NodesToRemoveGUID;
 
 	for (auto& [Guid, Node] : GetNodes())
@@ -115,14 +115,12 @@ EDataValidationResult UFlowAsset::ValidateAsset(FFlowMessageLog& MessageLog)
 			FText FailureReason;
 			if (!IsNodeClassAllowed(Node.Value->GetClass(), &FailureReason))
 			{
-				const FString ErrorMsg = 
-					FailureReason.IsEmpty() ?
-						FString::Format(*ValidationError_NodeClassNotAllowed, {*Node.Value->GetClass()->GetName()}) :
-						FailureReason.ToString();
+				const FString ErrorMsg =
+					FailureReason.IsEmpty() ? FString::Format(*ValidationError_NodeClassNotAllowed, {*Node.Value->GetClass()->GetName()}) : FailureReason.ToString();
 
 				MessageLog.Error(*ErrorMsg, Node.Value);
 			}
-			
+
 			Node.Value->ValidationLog.Messages.Empty();
 			if (Node.Value->ValidateNode() == EDataValidationResult::Invalid)
 			{
@@ -494,7 +492,7 @@ TArray<UFlowNode*> UFlowAsset::GetNodesInExecutionOrder(UFlowNode* FirstIterated
 		}
 	}
 	FoundNodes.Shrink();
-	
+
 	return FoundNodes;
 }
 
@@ -640,7 +638,7 @@ void UFlowAsset::PreStartFlow()
 #endif
 }
 
-void UFlowAsset::StartFlow(const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowAsset::StartFlow(const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	PreStartFlow();
 
@@ -692,12 +690,12 @@ AActor* UFlowAsset::TryFindActorOwner() const
 	return nullptr;
 }
 
-TWeakObjectPtr<UFlowAsset> UFlowAsset::GetFlowInstance(UFlowNode_SubGraph* SubGraphNode) const
+TWeakObjectPtr<UFlowAsset> UFlowAsset::GetFlowInstance(UFlowNode_AbstractSubGraph* SubGraphNode) const
 {
 	return ActiveSubGraphs.FindRef(SubGraphNode);
 }
 
-void UFlowAsset::TriggerCustomInput_FromSubGraph(UFlowNode_SubGraph* Node, const FName& EventName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/) const
+void UFlowAsset::TriggerCustomInput_FromSubGraph(UFlowNode_AbstractSubGraph* Node, const FName& EventName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/) const
 {
 	const TWeakObjectPtr<UFlowAsset> FlowInstance = ActiveSubGraphs.FindRef(Node);
 	if (FlowInstance.IsValid())
@@ -706,7 +704,7 @@ void UFlowAsset::TriggerCustomInput_FromSubGraph(UFlowNode_SubGraph* Node, const
 	}
 }
 
-void UFlowAsset::TriggerCustomInput(const FName& EventName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowAsset::TriggerCustomInput(const FName& EventName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	for (UFlowNode_CustomInput* CustomInput : CustomInputNodes)
 	{
@@ -718,7 +716,7 @@ void UFlowAsset::TriggerCustomInput(const FName& EventName, const FFlowParameter
 	}
 }
 
-void UFlowAsset::TriggerCustomOutput(const FName& EventName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowAsset::TriggerCustomOutput(const FName& EventName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (NodeOwningThisAssetInstance.IsValid()) // it's a SubGraph
 	{
@@ -747,7 +745,7 @@ void UFlowAsset::TriggerInput(const FGuid& NodeGuid, const FName& PinName, const
 	}
 }
 
-void UFlowAsset::FinishNode(UFlowNode* Node, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowAsset::FinishNode(UFlowNode* Node, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (ActiveNodes.Contains(Node))
 	{
@@ -764,6 +762,29 @@ void UFlowAsset::FinishNode(UFlowNode* Node, const FFlowParameter &FlowParameter
 			{
 				FinishFlow(EFlowFinishPolicy::Keep);
 			}
+		}
+	}
+}
+
+void UFlowAsset::TriggerFinishOutput(UFlowNode* Node, const FFlowParameter& FlowParameter) const
+{
+	if (ActiveNodes.Contains(Node))
+	{
+		if (NodeOwningThisAssetInstance.IsValid())
+		{
+			NodeOwningThisAssetInstance.Get()->OnFinishOutput(FlowParameter);
+		}
+	}
+}
+
+void UFlowAsset::TriggerEntryInput(UFlowNode_AbstractSubGraph* SubGraphNode, const FFlowParameter& FlowParameter) const
+{
+	const TWeakObjectPtr<UFlowAsset> Asset = GetFlowInstance(SubGraphNode);
+	if (Asset.IsValid())
+	{
+		if (UFlowNode* DefaultEntryNode = Asset->GetDefaultEntryNode())
+		{
+			DefaultEntryNode->TriggerFirstOutput(false, FlowParameter);
 		}
 	}
 }
@@ -788,7 +809,7 @@ FName UFlowAsset::GetDisplayName() const
 	return GetFName();
 }
 
-UFlowNode_SubGraph* UFlowAsset::GetNodeOwningThisAssetInstance() const
+UFlowNode_AbstractSubGraph* UFlowAsset::GetNodeOwningThisAssetInstance() const
 {
 	return NodeOwningThisAssetInstance.Get();
 }
@@ -815,7 +836,7 @@ FFlowAssetSaveData UFlowAsset::SaveInstance(TArray<FFlowAssetSaveData>& SavedFlo
 		if (Node && Node->ActivationState == EFlowNodeState::Active)
 		{
 			// iterate SubGraphs
-			if (UFlowNode_SubGraph* SubGraphNode = Cast<UFlowNode_SubGraph>(Node))
+			if (UFlowNode_AbstractSubGraph* SubGraphNode = Cast<UFlowNode_AbstractSubGraph>(Node))
 			{
 				const TWeakObjectPtr<UFlowAsset> SubFlowInstance = GetFlowInstance(SubGraphNode);
 				if (SubFlowInstance.IsValid())

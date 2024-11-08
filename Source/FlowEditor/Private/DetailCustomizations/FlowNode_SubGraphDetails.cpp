@@ -4,7 +4,7 @@
 
 #include "DetailLayoutBuilder.h"
 #include "FlowAsset.h"
-#include "Nodes/Route/FlowNode_SubGraph.h"
+#include "Nodes/Route/FlowNode_AbstractSubGraph.h"
 
 void FFlowNode_SubGraphDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLayout)
 {
@@ -13,7 +13,7 @@ void FFlowNode_SubGraphDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLay
 
 	if (ObjectsBeingEdited[0].IsValid())
 	{
-		const UFlowNode_SubGraph* SubGraphNode = CastChecked<UFlowNode_SubGraph>(ObjectsBeingEdited[0]);
+		const UFlowNode_AbstractSubGraph* SubGraphNode = CastChecked<UFlowNode_AbstractSubGraph>(ObjectsBeingEdited[0]);
 
 		// Generate the list of asset classes allowed or disallowed
 		TArray<UClass*> FlowAssetClasses;
@@ -60,7 +60,7 @@ void FFlowNode_SubGraphDetails::CustomizeDetails(IDetailLayoutBuilder& DetailLay
 			DisallowedClassesString.Append(FString::Printf(TEXT("%s,"), *Class->GetClassPathName().ToString()));
 		}
 	
-		const auto AssetProperty = DetailLayout.GetProperty(FName("Asset"), UFlowNode_SubGraph::StaticClass());
+		const auto AssetProperty = DetailLayout.GetProperty(FName("Asset"), UFlowNode_AbstractSubGraph::StaticClass());
 		if (FProperty* MetaDataProperty = AssetProperty->GetMetaDataProperty())
 		{
 			MetaDataProperty->SetMetaData(TEXT("AllowedClasses"), *AllowedClassesString);
