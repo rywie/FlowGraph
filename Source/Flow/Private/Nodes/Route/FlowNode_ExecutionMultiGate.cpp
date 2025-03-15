@@ -6,7 +6,7 @@
 
 UFlowNode_ExecutionMultiGate::UFlowNode_ExecutionMultiGate(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, StartIndex(INDEX_NONE)
+	  , StartIndex(INDEX_NONE)
 {
 #if WITH_EDITOR
 	Category = TEXT("Route");
@@ -22,7 +22,7 @@ UFlowNode_ExecutionMultiGate::UFlowNode_ExecutionMultiGate(const FObjectInitiali
 	AllowedSignalModes = {EFlowSignalMode::Enabled, EFlowSignalMode::Disabled};
 }
 
-void UFlowNode_ExecutionMultiGate::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowNode_ExecutionMultiGate::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (PinName == DefaultInputPin.PinName)
 	{
@@ -96,7 +96,7 @@ void UFlowNode_ExecutionMultiGate::Cleanup()
 {
 	NextOutput = 0;
 	Completed.Reset();
-	
+
 	Super::Cleanup();
 }
 

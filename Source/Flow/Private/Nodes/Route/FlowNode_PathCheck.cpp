@@ -35,13 +35,13 @@ void UFlowNode_PathCheck::Cleanup()
 }
 
 #if WITH_EDITOR
-TArray<FFlowPin> UFlowNode_PathCheck::GetContextInputs()
+TArray<FFlowPin> UFlowNode_PathCheck::GetContextInputs() const
 {
 	TArray<FFlowPin> Pins;
 	return Pins;
 }
 
-TArray<FFlowPin> UFlowNode_PathCheck::GetContextOutputs()
+TArray<FFlowPin> UFlowNode_PathCheck::GetContextOutputs() const
 {
 	TArray<FFlowPin> Pins;
 	for (const auto& Path : Paths)
@@ -57,7 +57,7 @@ FString UFlowNode_PathCheck::GetNodeDescription() const
 	TStringBuilder<32> StringBuilder;
 	StringBuilder.Append(FString::Printf(TEXT("Output Paths:")));
 	StringBuilder.Append(FString::Printf(TEXT("\n")));
-	
+
 	for (const auto& Path : Paths)
 	{
 		StringBuilder.Append(FString::Printf(TEXT("> %s"), *Path.ToString()));

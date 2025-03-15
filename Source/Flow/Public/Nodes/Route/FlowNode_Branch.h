@@ -13,13 +13,12 @@ class UFlowNode_Branch : public UFlowNode
 	GENERATED_UCLASS_BODY()
 
 public:
-
 	// UFlowNodeBase
 	virtual EFlowAddOnAcceptResult AcceptFlowNodeAddOnChild_Implementation(const UFlowNodeAddOn* AddOnTemplate, const TArray<UFlowNodeAddOn*>& AdditionalAddOnsToAssumeAreChildren) const override;
 	// --
 
 	// Event reacting on triggering Input pin
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter()) override;
 
 	static const FName INPIN_Evaluate;
 	static const FName OUTPIN_True;

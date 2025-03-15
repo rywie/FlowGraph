@@ -31,14 +31,14 @@ using namespace EFlowForEachAddOnFunctionReturnValue_Classifiers;
 UFlowNodeBase::UFlowNodeBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 #if WITH_EDITORONLY_DATA
-	, GraphNode(nullptr)
-	, bDisplayNodeTitleWithoutPrefix(true)
-	, bCanDelete(true)
-	, bCanDuplicate(true)
-	, bNodeDeprecated(false)
-	, NodeDisplayStyle(FlowNodeStyle::Node)
-	, NodeStyle(EFlowNodeStyle::Invalid)
-	, NodeColor(FLinearColor::Black)
+	  , GraphNode(nullptr)
+	  , bDisplayNodeTitleWithoutPrefix(true)
+	  , bCanDelete(true)
+	  , bCanDuplicate(true)
+	  , bNodeDeprecated(false)
+	  , NodeDisplayStyle(FlowNodeStyle::Node)
+	  , NodeStyle(EFlowNodeStyle::Invalid)
+	  , NodeColor(FLinearColor::Black)
 #endif
 {
 }
@@ -132,7 +132,7 @@ void UFlowNodeBase::OnActivate()
 	}
 }
 
-void UFlowNodeBase::ExecuteInputForSelfAndAddOns(const FName& PinName)
+void UFlowNodeBase::ExecuteInputForSelfAndAddOns(const FName& PinName, const FFlowParameter& FlowParameter)
 {
 	// AddOns can introduce input pins to Nodes without the Node being aware of the addition.
 	// To ensure that Nodes and AddOns only get the input pins signalled that they expect,
@@ -140,18 +140,18 @@ void UFlowNodeBase::ExecuteInputForSelfAndAddOns(const FName& PinName)
 
 	if (IsSupportedInputPinName(PinName))
 	{
-		ExecuteInput(PinName);
+		ExecuteInput(PinName, FlowParameter);
 	}
 
 	for (UFlowNodeAddOn* AddOn : AddOns)
 	{
-		AddOn->ExecuteInputForSelfAndAddOns(PinName);
+		AddOn->ExecuteInputForSelfAndAddOns(PinName, FlowParameter);
 	}
 }
 
-void UFlowNodeBase::ExecuteInput(const FName& PinName)
+void UFlowNodeBase::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter)
 {
-	IFlowCoreExecutableInterface::ExecuteInput(PinName);
+	IFlowCoreExecutableInterface::ExecuteInput(PinName, FlowParameter);
 }
 
 void UFlowNodeBase::ForceFinishNode()
@@ -174,24 +174,29 @@ void UFlowNodeBase::Cleanup()
 	IFlowCoreExecutableInterface::Cleanup();
 }
 
-void UFlowNodeBase::TriggerOutputPin(const FFlowOutputPinHandle Pin, const bool bFinish, const EFlowPinActivationType ActivationType)
+void UFlowNodeBase::TriggerFinishOutput(const FFlowParameter& FlowParameter)
 {
-	TriggerOutput(Pin.PinName, bFinish, ActivationType);
+	GetFlowAsset()->TriggerFinishOutput(this, FlowParameter);
 }
 
-void UFlowNodeBase::TriggerOutput(const FString& PinName, const bool bFinish)
+void UFlowNodeBase::TriggerOutputPin(const FFlowOutputPinHandle Pin, const bool bFinish, const EFlowPinActivationType ActivationType, const FFlowParameter& FlowParameter)
 {
-	TriggerOutput(FName(PinName), bFinish);
+	TriggerOutput(Pin.PinName, bFinish, ActivationType, FlowParameter);
 }
 
-void UFlowNodeBase::TriggerOutput(const FText& PinName, const bool bFinish)
+void UFlowNodeBase::TriggerOutput(const FString& PinName, const bool bFinish, const FFlowParameter& FlowParameter)
 {
-	TriggerOutput(FName(PinName.ToString()), bFinish);
+	TriggerOutput(FName(PinName), bFinish, EFlowPinActivationType::Default, FlowParameter);
 }
 
-void UFlowNodeBase::TriggerOutput(const TCHAR* PinName, const bool bFinish)
+void UFlowNodeBase::TriggerOutput(const FText& PinName, const bool bFinish, const FFlowParameter& FlowParameter)
 {
-	TriggerOutput(FName(PinName), bFinish);
+	TriggerOutput(FName(PinName.ToString()), bFinish, EFlowPinActivationType::Default, FlowParameter);
+}
+
+void UFlowNodeBase::TriggerOutput(const TCHAR* PinName, const bool bFinish, const FFlowParameter& FlowParameter)
+{
+	TriggerOutput(FName(PinName), bFinish, EFlowPinActivationType::Default, FlowParameter);
 }
 
 const FFlowPin* UFlowNodeBase::FindFlowPinByName(const FName& PinName, const TArray<FFlowPin>& FlowPins)
@@ -732,42 +737,42 @@ void UFlowNodeBase::EnsureNodeDisplayStyle()
 
 	switch (NodeStyle)
 	{
-		case EFlowNodeStyle::Condition:
-			{
-				NodeDisplayStyle = FlowNodeStyle::Condition;
-			}
-			break;
-		case EFlowNodeStyle::Default:
-			{
-				NodeDisplayStyle = FlowNodeStyle::Default;
-			}
-			break;
-		case EFlowNodeStyle::InOut:
-			{
-				NodeDisplayStyle = FlowNodeStyle::InOut;
-			}
-			break;
-		case EFlowNodeStyle::Latent:
-			{
-				NodeDisplayStyle = FlowNodeStyle::Latent;
-			}
-			break;
-		case EFlowNodeStyle::Logic:
-			{
-				NodeDisplayStyle = FlowNodeStyle::Logic;
-			}
-			break;
-		case EFlowNodeStyle::SubGraph:
-			{
-				NodeDisplayStyle = FlowNodeStyle::SubGraph;
-			}
-			break;
-		case EFlowNodeStyle::Custom:
-			{
-				NodeDisplayStyle = FlowNodeStyle::Custom;
-			}
-			break;
-		default: break;
+	case EFlowNodeStyle::Condition:
+		{
+			NodeDisplayStyle = FlowNodeStyle::Condition;
+		}
+		break;
+	case EFlowNodeStyle::Default:
+		{
+			NodeDisplayStyle = FlowNodeStyle::Default;
+		}
+		break;
+	case EFlowNodeStyle::InOut:
+		{
+			NodeDisplayStyle = FlowNodeStyle::InOut;
+		}
+		break;
+	case EFlowNodeStyle::Latent:
+		{
+			NodeDisplayStyle = FlowNodeStyle::Latent;
+		}
+		break;
+	case EFlowNodeStyle::Logic:
+		{
+			NodeDisplayStyle = FlowNodeStyle::Logic;
+		}
+		break;
+	case EFlowNodeStyle::SubGraph:
+		{
+			NodeDisplayStyle = FlowNodeStyle::SubGraph;
+		}
+		break;
+	case EFlowNodeStyle::Custom:
+		{
+			NodeDisplayStyle = FlowNodeStyle::Custom;
+		}
+		break;
+	default: break;
 	}
 
 	if (GEditor != nullptr && NodeDisplayStyle != NodeDisplayStylePrev)

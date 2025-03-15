@@ -53,9 +53,10 @@ public:
 	FLOW_API virtual UFlowNode* GetFlowNodeSelfOrOwner() override { return FlowNode; }
 	FLOW_API virtual bool IsSupportedInputPinName(const FName& PinName) const override;
 
-	FLOW_API virtual void TriggerFirstOutput(const bool bFinish) override;
-	FLOW_API virtual void TriggerOutput(const FName PinName, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default) override;
-	FLOW_API virtual void Finish() override;
+	FLOW_API virtual void TriggerFirstOutput(const bool bFinish, const FFlowParameter& FlowParameter = FFlowParameter()) override;
+	FLOW_API virtual void TriggerOutput(const FName PinName, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default,
+	                                    const FFlowParameter& FlowParameter = FFlowParameter()) override;
+	FLOW_API virtual void Finish(const FFlowParameter& FlowParameter = FFlowParameter()) override;
 	// --
 
 	// IFlowCoreExecutableInterface

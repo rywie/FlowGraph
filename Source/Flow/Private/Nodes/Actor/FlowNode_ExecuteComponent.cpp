@@ -174,7 +174,7 @@ void UFlowNode_ExecuteComponent::ForceFinishNode()
 	Super::ForceFinishNode();
 }
 
-void UFlowNode_ExecuteComponent::ExecuteInput(const FName& PinName)
+void UFlowNode_ExecuteComponent::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter)
 {
 	Super::ExecuteInput(PinName);
 
@@ -186,7 +186,7 @@ void UFlowNode_ExecuteComponent::ExecuteInput(const FName& PinName)
 		}
 		else if (ResolvedComp->Implements<UFlowCoreExecutableInterface>())
 		{
-			IFlowCoreExecutableInterface::Execute_K2_ExecuteInput(ResolvedComp, PinName);
+			IFlowCoreExecutableInterface::Execute_K2_ExecuteInput(ResolvedComp, PinName, FlowParameter);
 		}
 	}
 	else

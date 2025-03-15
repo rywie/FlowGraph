@@ -12,11 +12,11 @@
 
 UFlowNode_Log::UFlowNode_Log(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, Message()
-	, Verbosity(EFlowLogVerbosity::Warning)
-	, bPrintToScreen(true)
-	, Duration(5.0f)
-	, TextColor(FColor::Yellow)
+	  , Message()
+	  , Verbosity(EFlowLogVerbosity::Warning)
+	  , bPrintToScreen(true)
+	  , Duration(5.0f)
+	  , TextColor(FColor::Yellow)
 {
 #if WITH_EDITOR
 	Category = TEXT("Developer");
@@ -24,7 +24,7 @@ UFlowNode_Log::UFlowNode_Log(const FObjectInitializer& ObjectInitializer)
 #endif
 }
 
-void UFlowNode_Log::ExecuteInput(const FName& PinName)
+void UFlowNode_Log::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter)
 {
 	// Get the Message from either the default (Message property) or the data pin (if connected)
 	FFlowDataPinResult_String MessageResult = TryResolveDataPinAsString(GET_MEMBER_NAME_CHECKED(UFlowNode_Log, Message));
@@ -40,25 +40,25 @@ void UFlowNode_Log::ExecuteInput(const FName& PinName)
 
 	switch (Verbosity)
 	{
-		case EFlowLogVerbosity::Error:
-			UE_LOG(LogFlow, Error, TEXT("%s"), *MessageResult.Value);
-			break;
-		case EFlowLogVerbosity::Warning:
-			UE_LOG(LogFlow, Warning, TEXT("%s"), *MessageResult.Value);
-			break;
-		case EFlowLogVerbosity::Display:
-			UE_LOG(LogFlow, Display, TEXT("%s"), *MessageResult.Value);
-			break;
-		case EFlowLogVerbosity::Log:
-			UE_LOG(LogFlow, Log, TEXT("%s"), *MessageResult.Value);
-			break;
-		case EFlowLogVerbosity::Verbose:
-			UE_LOG(LogFlow, Verbose, TEXT("%s"), *MessageResult.Value);
-			break;
-		case EFlowLogVerbosity::VeryVerbose:
-			UE_LOG(LogFlow, VeryVerbose, TEXT("%s"), *MessageResult.Value);
-			break;
-		default: ;
+	case EFlowLogVerbosity::Error:
+		UE_LOG(LogFlow, Error, TEXT("%s"), *MessageResult.Value);
+		break;
+	case EFlowLogVerbosity::Warning:
+		UE_LOG(LogFlow, Warning, TEXT("%s"), *MessageResult.Value);
+		break;
+	case EFlowLogVerbosity::Display:
+		UE_LOG(LogFlow, Display, TEXT("%s"), *MessageResult.Value);
+		break;
+	case EFlowLogVerbosity::Log:
+		UE_LOG(LogFlow, Log, TEXT("%s"), *MessageResult.Value);
+		break;
+	case EFlowLogVerbosity::Verbose:
+		UE_LOG(LogFlow, Verbose, TEXT("%s"), *MessageResult.Value);
+		break;
+	case EFlowLogVerbosity::VeryVerbose:
+		UE_LOG(LogFlow, VeryVerbose, TEXT("%s"), *MessageResult.Value);
+		break;
+	default: ;
 	}
 
 	if (bPrintToScreen)
@@ -66,7 +66,7 @@ void UFlowNode_Log::ExecuteInput(const FName& PinName)
 		GEngine->AddOnScreenDebugMessage(-1, Duration, TextColor, MessageResult.Value);
 	}
 
-	TriggerFirstOutput(true);
+	TriggerFirstOutput(true, FlowParameter);
 }
 
 #if WITH_EDITOR

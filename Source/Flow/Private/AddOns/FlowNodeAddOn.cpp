@@ -30,27 +30,27 @@ void UFlowNodeAddOn::DeinitializeInstance()
 	FlowNode = nullptr;
 }
 
-void UFlowNodeAddOn::TriggerFirstOutput(const bool bFinish)
+void UFlowNodeAddOn::TriggerFirstOutput(const bool bFinish, const FFlowParameter& FlowParameter)
 {
 	if (ensure(FlowNode))
 	{
-		FlowNode->TriggerFirstOutput(bFinish);
+		FlowNode->TriggerFirstOutput(bFinish, FlowParameter);
 	}
 }
 
-void UFlowNodeAddOn::TriggerOutput(const FName PinName, const bool bFinish, const EFlowPinActivationType ActivationType)
+void UFlowNodeAddOn::TriggerOutput(const FName PinName, const bool bFinish, const EFlowPinActivationType ActivationType, const FFlowParameter& FlowParameter)
 {
 	if (ensure(FlowNode))
 	{
-		FlowNode->TriggerOutput(PinName, bFinish, ActivationType);
+		FlowNode->TriggerOutput(PinName, bFinish, ActivationType, FlowParameter);
 	}
 }
 
-void UFlowNodeAddOn::Finish()
+void UFlowNodeAddOn::Finish(const FFlowParameter& FlowParameter)
 {
 	if (ensure(FlowNode))
 	{
-		FlowNode->Finish();
+		FlowNode->Finish(FlowParameter);
 	}
 }
 
@@ -112,7 +112,7 @@ TArray<FFlowPin> UFlowNodeAddOn::GetPinsForContext(const TArray<FFlowPin>& Conte
 	TArray<FFlowPin> ContextPins = Super::GetContextInputs();
 
 	ContextPins.Reserve(ContextPins.Num() + Context.Num());
-	
+
 	for (const FFlowPin& InputPin : Context)
 	{
 		if (InputPin.IsValid())

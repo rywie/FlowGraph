@@ -36,8 +36,8 @@ EFlowAddOnAcceptResult UFlowNode_Branch::AcceptFlowNodeAddOnChild_Implementation
 	return Super::AcceptFlowNodeAddOnChild_Implementation(AddOnTemplate, AdditionalAddOnsToAssumeAreChildren);
 }
 
-void UFlowNode_Branch::ExecuteInput(const FName& PinName)
+void UFlowNode_Branch::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter)
 {
 	const bool bResult = UFlowNodeAddOn_PredicateAND::EvaluatePredicateAND(AddOns);
-	TriggerOutput(bResult ? OUTPIN_True : OUTPIN_False, true);
+	TriggerOutput(bResult ? OUTPIN_True : OUTPIN_False, true, EFlowPinActivationType::Default, FlowParameter);
 }

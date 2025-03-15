@@ -12,7 +12,7 @@ UFlowNode_PathRoute::UFlowNode_PathRoute(const FObjectInitializer& ObjectInitial
 	Category = TEXT("Route");
 	NodeStyle = EFlowNodeStyle::Logic;
 #endif
-	
+
 	InputPins = {};
 	OutputPins = {};
 }
@@ -37,7 +37,7 @@ void UFlowNode_PathRoute::Cleanup()
 }
 
 #if WITH_EDITOR
-TArray<FFlowPin> UFlowNode_PathRoute::GetContextInputs()
+TArray<FFlowPin> UFlowNode_PathRoute::GetContextInputs() const
 {
 	TArray<FFlowPin> Pins;
 	for (const auto& Path : Paths)
@@ -48,7 +48,7 @@ TArray<FFlowPin> UFlowNode_PathRoute::GetContextInputs()
 	return Pins;
 }
 
-TArray<FFlowPin> UFlowNode_PathRoute::GetContextOutputs()
+TArray<FFlowPin> UFlowNode_PathRoute::GetContextOutputs() const
 {
 	TArray<FFlowPin> Pins;
 	for (const auto& Path : Paths)
@@ -64,7 +64,7 @@ FString UFlowNode_PathRoute::GetNodeDescription() const
 	TStringBuilder<32> StringBuilder;
 	StringBuilder.Append(FString::Printf(TEXT("Routing Paths:")));
 	StringBuilder.Append(FString::Printf(TEXT("\n")));
-	
+
 	for (const auto& Path : Paths)
 	{
 		StringBuilder.Append(FString::Printf(TEXT("> %s"), *Path.ToString()));

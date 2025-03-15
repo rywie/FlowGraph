@@ -13,12 +13,12 @@ UFlowNode_Start::UFlowNode_Start(const FObjectInitializer& ObjectInitializer)
 	bCanDelete = bCanDuplicate = false;
 #endif
 
-	OutputPins = { UFlowNode::DefaultOutputPin };
+	OutputPins = {UFlowNode::DefaultOutputPin};
 }
 
-void UFlowNode_Start::ExecuteInput(const FName& PinName)
+void UFlowNode_Start::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
-	TriggerFirstOutput(true);
+	TriggerFirstOutput(true, FlowParameter);
 }
 
 void UFlowNode_Start::SetDataPinValueSupplier(IFlowDataPinValueSupplierInterface* DataPinValueSupplier)
@@ -38,7 +38,7 @@ bool UFlowNode_Start::TryAppendExternalInputPins(TArray<FFlowPin>& InOutPins) co
 			InOutPins.AddUnique(DataPinProperty.CreateFlowPin());
 		}
 	}
-	
+
 	return !OutputProperties.IsEmpty();
 }
 
@@ -216,7 +216,8 @@ FFlowDataPinResult_GameplayTagContainer UFlowNode_Start::TrySupplyDataPinAsGamep
 {
 	if (FlowDataPinValueSupplierInterface)
 	{
-		FFlowDataPinResult_GameplayTagContainer SuppliedResult = IFlowDataPinValueSupplierInterface::Execute_TrySupplyDataPinAsGameplayTagContainer(FlowDataPinValueSupplierInterface.GetObject(), PinName);
+		FFlowDataPinResult_GameplayTagContainer SuppliedResult = IFlowDataPinValueSupplierInterface::Execute_TrySupplyDataPinAsGameplayTagContainer(
+			FlowDataPinValueSupplierInterface.GetObject(), PinName);
 
 		if (SuppliedResult.Result == EFlowDataPinResolveResult::Success)
 		{

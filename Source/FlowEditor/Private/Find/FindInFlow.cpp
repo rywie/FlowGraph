@@ -8,7 +8,7 @@
 
 #include "FlowAsset.h"
 #include "Nodes/FlowNode.h"
-#include "Nodes/Graph/FlowNode_SubGraph.h"
+#include "Nodes/Graph/FlowNode_AbstractSubGraph.h"
 
 #include "EdGraph/EdGraph.h"
 #include "EdGraph/EdGraphNode.h"
@@ -316,7 +316,7 @@ void SFindInFlow::MatchTokens(const TArray<FString>& Tokens)
 			FString NodeDescription = FlowGraphNode->GetNodeDescription();
 			NodeSearchString += NodeDescription;
 			
-			UFlowNode_SubGraph* SubGraphNode = Cast<UFlowNode_SubGraph>(FlowGraphNode->GetFlowNodeBase());
+			UFlowNode_AbstractSubGraph* SubGraphNode = Cast<UFlowNode_AbstractSubGraph>(FlowGraphNode->GetFlowNodeBase());
 			if (bFindInSubGraph && SubGraphNode)
 			{
 				if (const UFlowAsset* FlowAsset = Cast<UFlowAsset>(SubGraphNode->GetAssetToEdit()); FlowAsset && FlowAsset->GetGraph())

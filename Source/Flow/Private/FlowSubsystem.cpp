@@ -7,7 +7,7 @@
 #include "FlowLogChannels.h"
 #include "FlowSave.h"
 #include "FlowSettings.h"
-#include "Nodes/Graph/FlowNode_SubGraph.h"
+#include "Nodes/Graph/FlowNode_AbstractSubGraph.h"
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -76,7 +76,7 @@ void UFlowSubsystem::AbortActiveFlows()
 	RootInstances.Empty();
 }
 
-void UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances /* = true */)
+void UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances /* = true */, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (FlowAsset)
 	{
@@ -84,7 +84,7 @@ void UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const 
 		{
 			// todo: (gtaylor) In the future, we may want to provide a way to set a data pin value supplier
 			// for the root flow graph.
-			NewFlow->StartFlow();
+			NewFlow->StartFlow(FlowParameter);
 		}
 	}
 #if WITH_EDITOR
@@ -161,14 +161,15 @@ void UFlowSubsystem::FinishAllRootFlows(UObject* Owner, const EFlowFinishPolicy 
 	}
 }
 
-UFlowAsset* UFlowSubsystem::CreateSubFlow(UFlowNode_SubGraph* SubGraphNode, const FString& SavedInstanceName, const bool bPreloading /* = false */)
+UFlowAsset* UFlowSubsystem::CreateSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const FString& SavedInstanceName, const bool bPreloading /* = false */,
+                                          const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	UFlowAsset* NewInstance = nullptr;
 
 	if (!InstancedSubFlows.Contains(SubGraphNode))
 	{
 		const TWeakObjectPtr<UObject> Owner = SubGraphNode->GetFlowAsset() ? SubGraphNode->GetFlowAsset()->GetOwner() : nullptr;
-		NewInstance = CreateFlowInstance(Owner, SubGraphNode->Asset.LoadSynchronous(), SavedInstanceName);
+		NewInstance = CreateFlowInstance(Owner, SubGraphNode->GetSubAsset().LoadSynchronous(), SavedInstanceName);
 
 		if (NewInstance)
 		{
@@ -192,14 +193,14 @@ UFlowAsset* UFlowSubsystem::CreateSubFlow(UFlowNode_SubGraph* SubGraphNode, cons
 		// don't activate Start Node if we're loading Sub Graph from SaveGame
 		if (SavedInstanceName.IsEmpty())
 		{
-			AssetInstance->StartFlow(SubGraphNode);
+			AssetInstance->StartFlow(FlowParameter, SubGraphNode);
 		}
 	}
 
 	return NewInstance;
 }
 
-void UFlowSubsystem::RemoveSubFlow(UFlowNode_SubGraph* SubGraphNode, const EFlowFinishPolicy FinishPolicy)
+void UFlowSubsystem::RemoveSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const EFlowFinishPolicy FinishPolicy)
 {
 	if (InstancedSubFlows.Contains(SubGraphNode))
 	{
@@ -397,14 +398,15 @@ void UFlowSubsystem::LoadRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const F
 	}
 }
 
-void UFlowSubsystem::LoadSubFlow(UFlowNode_SubGraph* SubGraphNode, const FString& SavedAssetInstanceName)
+void UFlowSubsystem::LoadSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const FString& SavedAssetInstanceName)
 {
-	if (SubGraphNode->Asset.IsNull())
+	const TSoftObjectPtr<UFlowAsset> Asset = SubGraphNode->GetSubAsset();
+	if (Asset.IsNull())
 	{
 		return;
 	}
 
-	UFlowAsset* SubGraphAsset = SubGraphNode->Asset.LoadSynchronous();
+	UFlowAsset* SubGraphAsset = Asset.LoadSynchronous();
 
 	for (const FFlowAssetSaveData& AssetRecord : LoadedSaveGame->FlowInstances)
 	{

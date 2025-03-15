@@ -7,6 +7,7 @@
 
 #include "FlowSave.h"
 #include "FlowTypes.h"
+#include "Nodes/FlowParameter.h"
 #include "Interfaces/FlowOwnerInterface.h"
 #include "FlowComponent.generated.h"
 
@@ -24,11 +25,13 @@ struct FNotifyTagReplication
 	UPROPERTY()
 	FGameplayTag NotifyTag;
 
-	FNotifyTagReplication() {}
+	FNotifyTagReplication()
+	{
+	}
 
 	FNotifyTagReplication(const FGameplayTag& InActorTag, const FGameplayTag& InNotifyTag)
 		: ActorTag(InActorTag)
-		, NotifyTag(InNotifyTag)
+		  , NotifyTag(InNotifyTag)
 	{
 	}
 };
@@ -45,13 +48,12 @@ UCLASS(Blueprintable, meta = (BlueprintSpawnableComponent))
 class FLOW_API UFlowComponent : public UActorComponent, public IFlowOwnerInterface
 {
 	GENERATED_UCLASS_BODY()
-
 	friend class UFlowSubsystem;
-	
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
-//////////////////////////////////////////////////////////////////////////
-// Identity Tags
+
+	//////////////////////////////////////////////////////////////////////////
+	// Identity Tags
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flow")
 	FGameplayTagContainer IdentityTags;
@@ -102,12 +104,12 @@ public:
 
 public:
 	void VerifyIdentityTags() const;
-		
+
 	UFUNCTION(BlueprintCallable, Category = "Flow")
 	void LogError(FString Message, const EFlowOnScreenMessageType OnScreenMessageType = EFlowOnScreenMessageType::Permanent) const;
 
-//////////////////////////////////////////////////////////////////////////
-// Component sending Notify Tags to Flow Graph, or any other listener
+	//////////////////////////////////////////////////////////////////////////
+	// Component sending Notify Tags to Flow Graph, or any other listener
 
 private:
 	// Stores only recently sent tags
@@ -134,8 +136,8 @@ private:
 public:
 	FFlowComponentNotify OnNotifyFromComponent;
 
-//////////////////////////////////////////////////////////////////////////
-// Component receiving Notify Tags from Flow Graph
+	//////////////////////////////////////////////////////////////////////////
+	// Component receiving Notify Tags from Flow Graph
 
 private:
 	// Stores only recently replicated tags
@@ -154,8 +156,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Flow")
 	FFlowComponentDynamicNotify ReceiveNotify;
 
-//////////////////////////////////////////////////////////////////////////
-// Sending Notify Tags between Flow components
+	//////////////////////////////////////////////////////////////////////////
+	// Sending Notify Tags between Flow components
 
 private:
 	// Stores only recently replicated tags
@@ -171,8 +173,8 @@ private:
 	UFUNCTION()
 	void OnRep_NotifyTagsFromAnotherComponent();
 
-//////////////////////////////////////////////////////////////////////////
-// Root Flow
+	//////////////////////////////////////////////////////////////////////////
+	// Root Flow
 
 public:
 	// Asset that might instantiated as "Root Flow" 
@@ -209,35 +211,37 @@ public:
 	UFUNCTION(BlueprintPure, Category = "RootFlow", meta = (DeprecatedFunction, DeprecationMessage="Use GetRootInstances() instead."))
 	UFlowAsset* GetRootFlowInstance() const;
 
-//////////////////////////////////////////////////////////////////////////
-// Custom Input and Output events
+	//////////////////////////////////////////////////////////////////////////
+	// Custom Input and Output events
 
 public:
 	// This will trigger a specific CustomInput on this components root flow
 	UFUNCTION(BlueprintCallable, Category = "RootFlow")
-	void TriggerRootFlowCustomInput(const FName& EventName) const;
+	void TriggerRootFlowCustomInput(const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter()) const;
 
 	// Called when a Root flow asset triggers a CustomOutput
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "OnRootFlowCustomEvent")
-	void BP_OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName);
+	void BP_OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 
-	virtual void OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName) {}
+	virtual void OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter())
+	{
+	}
 
 	// UFlowAsset-only access
-	void DispatchRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName);
+	void DispatchRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 	// ---
 
 	UE_DEPRECATED(5.5, "Please use OnRootFlowCustomEvent instead.")
-	void BP_OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName);
-	
-	UE_DEPRECATED(5.5, "Please use OnRootFlowCustomEvent instead.")
-	virtual void OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName);
-	
-	UE_DEPRECATED(5.5, "Please use OnTriggerRootFlowCustomOutputDispatcher instead.")
-	void OnTriggerRootFlowOutputEventDispatcher(UFlowAsset* RootFlowInstance, const FName& EventName);
+	void BP_OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 
-//////////////////////////////////////////////////////////////////////////
-// SaveGame
+	UE_DEPRECATED(5.5, "Please use OnRootFlowCustomEvent instead.")
+	virtual void OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
+
+	UE_DEPRECATED(5.5, "Please use OnTriggerRootFlowCustomOutputDispatcher instead.")
+	void OnTriggerRootFlowOutputEventDispatcher(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
+
+	//////////////////////////////////////////////////////////////////////////
+	// SaveGame
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "SaveGame")
@@ -255,12 +259,12 @@ public:
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	void OnSave();
-	
+
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	void OnLoad();
-	
-//////////////////////////////////////////////////////////////////////////
-// Helpers
+
+	//////////////////////////////////////////////////////////////////////////
+	// Helpers
 
 public:
 	UFlowSubsystem* GetFlowSubsystem() const;

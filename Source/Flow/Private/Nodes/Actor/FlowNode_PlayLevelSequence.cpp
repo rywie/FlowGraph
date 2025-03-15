@@ -23,17 +23,17 @@ FFlowNodeLevelSequenceEvent UFlowNode_PlayLevelSequence::OnPlaybackCompleted;
 
 UFlowNode_PlayLevelSequence::UFlowNode_PlayLevelSequence(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, bPlayReverse(false)
-	, bUseGraphOwnerAsTransformOrigin(false)
-	, bReplicates(false)
-	, bAlwaysRelevant(false)
-	, bApplyOwnerTimeDilation(true)
-	, LoadedSequence(nullptr)
-	, SequencePlayer(nullptr)
-	, CachedPlayRate(0)
-	, StartTime(0.0f)
-	, ElapsedTime(0.0f)
-	, TimeDilation(1.0f)
+	  , bPlayReverse(false)
+	  , bUseGraphOwnerAsTransformOrigin(false)
+	  , bReplicates(false)
+	  , bAlwaysRelevant(false)
+	  , bApplyOwnerTimeDilation(true)
+	  , LoadedSequence(nullptr)
+	  , SequencePlayer(nullptr)
+	  , CachedPlayRate(0)
+	  , StartTime(0.0f)
+	  , ElapsedTime(0.0f)
+	  , TimeDilation(1.0f)
 {
 #if WITH_EDITOR
 	Category = TEXT("Actor");
@@ -151,7 +151,8 @@ void UFlowNode_PlayLevelSequence::CreatePlayer()
 		AActor* TransformOriginActor = bUseGraphOwnerAsTransformOrigin ? OwningActor : nullptr;
 
 		// Finally create the player
-		SequencePlayer = UFlowLevelSequencePlayer::CreateFlowLevelSequencePlayer(this, LoadedSequence, PlaybackSettings, CameraSettings, TransformOriginActor, bReplicates, bAlwaysRelevant, SequenceActor);
+		SequencePlayer = UFlowLevelSequencePlayer::CreateFlowLevelSequencePlayer(this, LoadedSequence, PlaybackSettings, CameraSettings, TransformOriginActor, bReplicates, bAlwaysRelevant,
+		                                                                         SequenceActor);
 
 		if (SequencePlayer)
 		{
@@ -164,7 +165,7 @@ void UFlowNode_PlayLevelSequence::CreatePlayer()
 	}
 }
 
-void UFlowNode_PlayLevelSequence::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowNode_PlayLevelSequence::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (PinName == TEXT("Start"))
 	{
@@ -177,7 +178,7 @@ void UFlowNode_PlayLevelSequence::ExecuteInput(const FName &PinName, const FFlow
 
 			if (SequencePlayer)
 			{
-				TriggerOutput(TEXT("PreStart"), false, CachedFlowParameter);
+				TriggerOutput(TEXT("PreStart"), false, EFlowPinActivationType::Default, CachedFlowParameter);
 
 				SequencePlayer->OnFinished.AddDynamic(this, &UFlowNode_PlayLevelSequence::OnPlaybackFinished);
 
@@ -190,7 +191,7 @@ void UFlowNode_PlayLevelSequence::ExecuteInput(const FName &PinName, const FFlow
 					SequencePlayer->Play();
 				}
 
-				TriggerOutput(TEXT("Started"), false, CachedFlowParameter);
+				TriggerOutput(TEXT("Started"), false, EFlowPinActivationType::Default, CachedFlowParameter);
 			}
 		}
 
@@ -251,7 +252,7 @@ void UFlowNode_PlayLevelSequence::OnLoad_Implementation()
 
 void UFlowNode_PlayLevelSequence::TriggerEvent(const FString& EventName)
 {
-	TriggerOutput(*EventName, false, CachedFlowParameter);
+	TriggerOutput(*EventName, false, EFlowPinActivationType::Default, CachedFlowParameter);
 }
 
 void UFlowNode_PlayLevelSequence::OnTimeDilationUpdate(const float NewTimeDilation)
@@ -267,7 +268,7 @@ void UFlowNode_PlayLevelSequence::OnTimeDilationUpdate(const float NewTimeDilati
 
 void UFlowNode_PlayLevelSequence::OnPlaybackFinished()
 {
-	TriggerOutput(TEXT("Completed"), true, CachedFlowParameter);
+	TriggerOutput(TEXT("Completed"), true, EFlowPinActivationType::Default, CachedFlowParameter);
 }
 
 void UFlowNode_PlayLevelSequence::StopPlayback()
@@ -277,7 +278,7 @@ void UFlowNode_PlayLevelSequence::StopPlayback()
 		SequencePlayer->Stop();
 	}
 
-	TriggerOutput(TEXT("Stopped"), true, CachedFlowParameter);
+	TriggerOutput(TEXT("Stopped"), true, EFlowPinActivationType::Default, CachedFlowParameter);
 }
 
 void UFlowNode_PlayLevelSequence::Cleanup()

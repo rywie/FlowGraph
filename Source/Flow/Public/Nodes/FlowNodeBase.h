@@ -45,7 +45,7 @@ struct TResolveDataPinWorkingData
 	TFlowDataPinResultType DataPinResult;
 	const UFlowNode* FlowNode = nullptr;
 	const FFlowPin* FlowPin = nullptr;
-	
+
 	TArray<FFlowPinValueSupplierData> PinValueSupplierDatas;
 
 	static constexpr bool bCheckDefaultProperties = true;
@@ -57,18 +57,17 @@ struct TResolveDataPinWorkingData
 UCLASS(Abstract, BlueprintType, HideCategories = Object)
 class FLOW_API UFlowNodeBase
 	: public UObject
-	, public IFlowCoreExecutableInterface
-	, public IFlowContextPinSupplierInterface
+	  , public IFlowCoreExecutableInterface
+	  , public IFlowContextPinSupplierInterface
 {
 	GENERATED_UCLASS_BODY()
-
 	friend class SFlowGraphNode;
 	friend class UFlowAsset;
 	friend class UFlowGraphNode;
 	friend class UFlowGraphSchema;
 
-//////////////////////////////////////////////////////////////////////////
-// Node
+	//////////////////////////////////////////////////////////////////////////
+	// Node
 
 public:
 	// UObject
@@ -76,7 +75,7 @@ public:
 	// --
 
 	// Dispatcher for ExecuteInput to ensure the AddOns get their ExecuteInput calls even if the node/addon
-	void ExecuteInputForSelfAndAddOns(const FName& PinName);
+	void ExecuteInputForSelfAndAddOns(const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter());
 
 	// IFlowCoreExecutableInterface
 	virtual void InitializeInstance() override;
@@ -86,7 +85,7 @@ public:
 	virtual void FlushContent() override;
 
 	virtual void OnActivate() override;
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter()) override;
 
 	virtual void ForceFinishNode() override;
 	virtual void Cleanup() override;
@@ -94,27 +93,33 @@ public:
 
 	// Finish execution of node, it will call Cleanup
 	UFUNCTION(BlueprintCallable, Category = "FlowNode")
-	virtual void Finish() PURE_VIRTUAL(Finish)
+	virtual void Finish(const FFlowParameter& FlowParameter = FFlowParameter()) PURE_VIRTUAL(Finish)
+
+	// Call Finish without Deactivation
+	UFUNCTION(BlueprintCallable, Category = "FlowNode")
+	void TriggerFinishOutput(const FFlowParameter& FlowParameter = FFlowParameter());
 
 	// Simply trigger the first Output Pin, convenient to use if node has only one output
 	UFUNCTION(BlueprintCallable, Category = "FlowNode")
-	virtual void TriggerFirstOutput(const bool bFinish) PURE_VIRTUAL(TriggerFirstOutput)
+	virtual void TriggerFirstOutput(const bool bFinish, const FFlowParameter& FlowParameter = FFlowParameter()) PURE_VIRTUAL(TriggerFirstOutput)
 
 	// Cause a specific output to be triggered (by PinName)
 	UFUNCTION(BlueprintCallable, Category = "FlowNode", meta = (HidePin = "ActivationType"))
-	virtual void TriggerOutput(const FName PinName, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default) PURE_VIRTUAL(TriggerOutput)
+	virtual void TriggerOutput(const FName PinName, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default,
+	                           const FFlowParameter& FlowParameter = FFlowParameter()) PURE_VIRTUAL(TriggerOutput)
 
 	// TriggerOutput convenience aliases
-	void TriggerOutput(const FString& PinName, const bool bFinish = false);
-	void TriggerOutput(const FText& PinName, const bool bFinish = false);
-	void TriggerOutput(const TCHAR* PinName, const bool bFinish = false);
+	void TriggerOutput(const FString& PinName, const bool bFinish = false, const FFlowParameter& FlowParameter = FFlowParameter());
+	void TriggerOutput(const FText& PinName, const bool bFinish = false, const FFlowParameter& FlowParameter = FFlowParameter());
+	void TriggerOutput(const TCHAR* PinName, const bool bFinish = false, const FFlowParameter& FlowParameter = FFlowParameter());
 
 	// Cause a specific output to be triggered (by PinHandle)
 	UFUNCTION(BlueprintCallable, Category = "FlowNode", meta = (HidePin = "ActivationType"))
-	virtual void TriggerOutputPin(const FFlowOutputPinHandle Pin, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);
+	virtual void TriggerOutputPin(const FFlowOutputPinHandle Pin, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default,
+	                              const FFlowParameter& FlowParameter = FFlowParameter());
 
-//////////////////////////////////////////////////////////////////////////
-// Pins	
+	//////////////////////////////////////////////////////////////////////////
+	// Pins	
 
 public:
 	static const FFlowPin* FindFlowPinByName(const FName& PinName, const TArray<FFlowPin>& FlowPins);
@@ -122,24 +127,25 @@ public:
 	virtual bool IsSupportedInputPinName(const FName& PinName) const PURE_VIRTUAL(IsSupportedInputPinName, return true;);
 
 #if WITH_EDITOR
-public:	
+
+public:
 	// IFlowContextPinSupplierInterface
 	virtual bool SupportsContextPins() const override { return IFlowContextPinSupplierInterface::SupportsContextPins(); }
 	virtual TArray<FFlowPin> GetContextInputs() const override;
 	virtual TArray<FFlowPin> GetContextOutputs() const override;
 	// --
 #endif // WITH_EDITOR
-	
-//////////////////////////////////////////////////////////////////////////
-// Owners
 
-public:	
+	//////////////////////////////////////////////////////////////////////////
+	// Owners
+
+public:
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	UFlowAsset* GetFlowAsset() const;
 
 	const UFlowNode* GetFlowNodeSelfOrOwner() const;
 	virtual UFlowNode* GetFlowNodeSelfOrOwner() PURE_VIRTUAL(GetFlowNodeSelfOrOwner, return nullptr;);
-	
+
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	UFlowSubsystem* GetFlowSubsystem() const;
 
@@ -161,8 +167,8 @@ protected:
 	static IFlowOwnerInterface* TryGetFlowOwnerInterfaceFromRootFlowOwner(UObject& RootFlowOwner, const UClass& ExpectedOwnerClass);
 	static IFlowOwnerInterface* TryGetFlowOwnerInterfaceActor(UObject& RootFlowOwner, const UClass& ExpectedOwnerClass);
 
-//////////////////////////////////////////////////////////////////////////
-// AddOn support
+	//////////////////////////////////////////////////////////////////////////
+	// AddOn support
 
 protected:
 	// Flow Node AddOn attachments
@@ -209,9 +215,8 @@ public:
 	EFlowForEachAddOnFunctionReturnValue ForEachAddOnForClass(const UClass& InterfaceOrClass, const FFlowNodeAddOnFunction& Function) const;
 
 public:
-
-//////////////////////////////////////////////////////////////////////////
-// Data Pins
+	//////////////////////////////////////////////////////////////////////////
+	// Data Pins
 
 	// Must implement TryResolveDataAs... for every EFlowPinType
 	FLOW_ASSERT_ENUM_MAX(EFlowPinType, 16);
@@ -265,21 +270,21 @@ public:
 	EFlowDataPinResolveResult TryResolveDataPinPrerequisites(const FName& PinName, const UFlowNode*& FlowNode, const FFlowPin*& FlowPin, EFlowPinType PinType) const;
 
 public:
-
-//////////////////////////////////////////////////////////////////////////
-// Editor
+	//////////////////////////////////////////////////////////////////////////
+	// Editor
 
 #if WITH_EDITORONLY_DATA
+
 protected:
 	UPROPERTY()
 	TObjectPtr<UEdGraphNode> GraphNode;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category = "FlowNode")
 	uint8 bDisplayNodeTitleWithoutPrefix : 1;
-	
-	uint8 bCanDelete : 1 ;
+
+	uint8 bCanDelete : 1;
 	uint8 bCanDuplicate : 1;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category = "FlowNode")
 	bool bNodeDeprecated;
 
@@ -292,9 +297,10 @@ protected:
 #endif // WITH_EDITORONLY_DATA
 
 #if WITH_EDITOR
+
 public:
 	virtual void PostLoad() override;
-	
+
 	void SetGraphNode(UEdGraphNode* NewGraphNode);
 	UEdGraphNode* GetGraphNode() const { return GraphNode; }
 
@@ -307,9 +313,11 @@ public:
 	// UObject
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	// --
-	
+
 	// used when import graph from another asset
-	virtual void PostImport() {}
+	virtual void PostImport()
+	{
+	}
 
 	// Called by owning FlowNode to add to its Status String.
 	// (may be multi-line)
@@ -322,10 +330,11 @@ protected:
 	FString K2_GetStatusString() const;
 
 #if WITH_EDITORONLY_DATA
+
 protected:
 	UPROPERTY()
 	FString Category;
-	
+
 	UPROPERTY(EditDefaultsOnly, Category = "FlowNode", meta = (Categories = "Flow.NodeStyle"))
 	FGameplayTag NodeDisplayStyle;
 
@@ -344,6 +353,7 @@ protected:
 #endif // WITH_EDITORONLY_DATA
 
 #if WITH_EDITOR
+
 public:
 	virtual FString GetNodeCategory() const;
 
@@ -351,7 +361,7 @@ public:
 
 	// This method allows to have different for every node instance, i.e. Red if node represents enemy, Green if node represents a friend
 	virtual bool GetDynamicTitleColor(FLinearColor& OutColor) const;
-	
+
 	virtual FText GetNodeTitle() const;
 	virtual FText GetNodeToolTip() const;
 	virtual FText GetNodeConfigText() const;
@@ -361,7 +371,7 @@ protected:
 	void EnsureNodeDisplayStyle();
 #endif // WITH_EDITOR
 
-protected:	
+protected:
 	// Set the editor-only Config Text 
 	// (for displaying config info on the Node in the flow graph, ignored in non-editor builds)
 	UFUNCTION(BlueprintCallable, Category = "FlowNode")
@@ -372,16 +382,17 @@ protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "FlowNode")
 	void UpdateNodeConfigText();
 
-//////////////////////////////////////////////////////////////////////////
-// Debug support
-	
+	//////////////////////////////////////////////////////////////////////////
+	// Debug support
+
 #if WITH_EDITOR
+
 public:
 	// Short summary of node's content - displayed over node as NodeInfoPopup
 	virtual FString GetNodeDescription() const;
 #endif
 
-protected:	
+protected:
 	// Short summary of node's content - displayed over node as NodeInfoPopup
 	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Get Node Description"))
 	FString K2_GetNodeDescription() const;
@@ -399,6 +410,7 @@ protected:
 	void LogVerbose(FString Message) const;
 
 #if !UE_BUILD_SHIPPING
+
 protected:
 	bool BuildMessage(FString& Message) const;
 #endif

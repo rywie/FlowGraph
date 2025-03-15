@@ -6,8 +6,8 @@
 
 UFlowNode_Counter::UFlowNode_Counter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, Goal(2)
-	, CurrentSum(0)
+	  , Goal(2)
+	  , CurrentSum(0)
 {
 #if WITH_EDITOR
 	Category = TEXT("Route");
@@ -26,18 +26,18 @@ UFlowNode_Counter::UFlowNode_Counter(const FObjectInitializer& ObjectInitializer
 	OutputPins.Add(FFlowPin(TEXT("Skipped")));
 }
 
-void UFlowNode_Counter::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowNode_Counter::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (PinName == TEXT("Increment"))
 	{
 		CurrentSum++;
 		if (CurrentSum == Goal)
 		{
-			TriggerOutput(TEXT("Goal"), true, FlowParameter);
+			TriggerOutput(TEXT("Goal"), true, EFlowPinActivationType::Default, FlowParameter);
 		}
 		else
 		{
-			TriggerOutput(TEXT("Step"), false, FlowParameter);
+			TriggerOutput(TEXT("Step"), false, EFlowPinActivationType::Default, FlowParameter);
 		}
 		return;
 	}
@@ -47,18 +47,18 @@ void UFlowNode_Counter::ExecuteInput(const FName &PinName, const FFlowParameter 
 		CurrentSum--;
 		if (CurrentSum == 0)
 		{
-			TriggerOutput(TEXT("Zero"), true, FlowParameter);
+			TriggerOutput(TEXT("Zero"), true, EFlowPinActivationType::Default, FlowParameter);
 		}
 		else
 		{
-			TriggerOutput(TEXT("Step"), false, FlowParameter);
+			TriggerOutput(TEXT("Step"), false, EFlowPinActivationType::Default, FlowParameter);
 		}
 		return;
 	}
 
 	if (PinName == TEXT("Skip"))
 	{
-		TriggerOutput(TEXT("Skipped"), true, FlowParameter);
+		TriggerOutput(TEXT("Skipped"), true, EFlowPinActivationType::Default, FlowParameter);
 	}
 }
 

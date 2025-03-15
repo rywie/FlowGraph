@@ -6,9 +6,9 @@
 
 UFlowNode_LogicalOR::UFlowNode_LogicalOR(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, bEnabled(true)
-	, ExecutionLimit(1)
-	, ExecutionCount(0)
+	  , bEnabled(true)
+	  , ExecutionLimit(1)
+	  , ExecutionCount(0)
 {
 #if WITH_EDITOR
 	Category = TEXT("Route|Logic");
@@ -20,7 +20,7 @@ UFlowNode_LogicalOR::UFlowNode_LogicalOR(const FObjectInitializer& ObjectInitial
 	InputPins.Add(FFlowPin(TEXT("Disable"), TEXT("Disabling resets Execution Count")));
 }
 
-void UFlowNode_LogicalOR::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowNode_LogicalOR::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (PinName == TEXT("Enable"))
 	{

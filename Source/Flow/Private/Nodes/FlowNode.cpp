@@ -782,7 +782,7 @@ void UFlowNode::TriggerFlush()
 	FlushContent();
 }
 
-void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType ActivationType /*= Default*/)
+void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType ActivationType /*= Default*/, const FFlowParameter& FlowParameter)
 {
 	if (SignalMode == EFlowSignalMode::Disabled)
 	{
@@ -824,7 +824,7 @@ void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType 
 	switch (SignalMode)
 	{
 		case EFlowSignalMode::Enabled:
-			ExecuteInputForSelfAndAddOns(PinName);
+			ExecuteInputForSelfAndAddOns(PinName, FlowParameter);
 			break;
 		case EFlowSignalMode::Disabled:
 			if (UFlowSettings::Get()->bLogOnSignalDisabled)
@@ -843,15 +843,15 @@ void UFlowNode::TriggerInput(const FName& PinName, const EFlowPinActivationType 
 	}
 }
 
-void UFlowNode::TriggerFirstOutput(const bool bFinish)
+void UFlowNode::TriggerFirstOutput(const bool bFinish, const FFlowParameter& FlowParameter)
 {
 	if (OutputPins.Num() > 0)
 	{
-		TriggerOutput(OutputPins[0].PinName, bFinish);
+		TriggerOutput(OutputPins[0].PinName, bFinish, EFlowPinActivationType::Default, FlowParameter);
 	}
 }
 
-void UFlowNode::TriggerOutput(const FName PinName, const bool bFinish /*= false*/, const EFlowPinActivationType ActivationType /*= Default*/)
+void UFlowNode::TriggerOutput(const FName PinName, const bool bFinish /*= false*/, const EFlowPinActivationType ActivationType /*= Default*/, const FFlowParameter& FlowParameter)
 {
 	if (ActivationState == EFlowNodeState::Completed || ActivationState == EFlowNodeState::Aborted)
 	{
@@ -863,7 +863,7 @@ void UFlowNode::TriggerOutput(const FName PinName, const bool bFinish /*= false*
 	// clean up node, if needed
 	if (bFinish)
 	{
-		Finish();
+		Finish(FlowParameter);
 	}
 
 #if !UE_BUILD_SHIPPING
@@ -888,14 +888,14 @@ void UFlowNode::TriggerOutput(const FName PinName, const bool bFinish /*= false*
 	if (OutputPins.Contains(PinName) && Connections.Contains(PinName))
 	{
 		const FConnectedPin FlowPin = GetConnection(PinName);
-		GetFlowAsset()->TriggerInput(FlowPin.NodeGuid, FlowPin.PinName);
+		GetFlowAsset()->TriggerInput(FlowPin.NodeGuid, FlowPin.PinName, FlowParameter);
 	}
 }
 
-void UFlowNode::Finish()
+void UFlowNode::Finish(const FFlowParameter& FlowParameter)
 {
 	Deactivate();
-	GetFlowAsset()->FinishNode(this);
+	GetFlowAsset()->FinishNode(this, FlowParameter);
 }
 
 void UFlowNode::Deactivate()

@@ -9,12 +9,12 @@
 UENUM(BlueprintType)
 enum class EFlowLogVerbosity : uint8
 {
-	Error		UMETA(ToolTip = "Prints a message to console (and log file)"),
-	Warning		UMETA(ToolTip = "Prints a message to console (and log file)"),
-	Display		UMETA(ToolTip = "Prints a message to console (and log file)"),
-	Log			UMETA(ToolTip = "Prints a message to a log file (does not print to console)"),
-	Verbose		UMETA(ToolTip = "Prints a verbose message to a log file (if Verbose logging is enabled for the given category, usually used for detailed logging)"),
-	VeryVerbose	UMETA(ToolTip = "Prints a verbose message to a log file (if VeryVerbose logging is enabled, usually used for detailed logging that would otherwise spam output)"),
+	Error UMETA(ToolTip = "Prints a message to console (and log file)"),
+	Warning UMETA(ToolTip = "Prints a message to console (and log file)"),
+	Display UMETA(ToolTip = "Prints a message to console (and log file)"),
+	Log UMETA(ToolTip = "Prints a message to a log file (does not print to console)"),
+	Verbose UMETA(ToolTip = "Prints a verbose message to a log file (if Verbose logging is enabled for the given category, usually used for detailed logging)"),
+	VeryVerbose UMETA(ToolTip = "Prints a verbose message to a log file (if VeryVerbose logging is enabled, usually used for detailed logging that would otherwise spam output)"),
 };
 
 /**
@@ -25,7 +25,7 @@ UCLASS(NotBlueprintable, meta = (DisplayName = "Log", Keywords = "print"))
 class FLOW_API UFlowNode_Log : public UFlowNode
 {
 	GENERATED_UCLASS_BODY()
-	
+
 private:
 	// The message to write to the log
 	// (if the Message input pin is not connected to another source)
@@ -45,9 +45,10 @@ private:
 	FColor TextColor;
 
 protected:
-	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
+	virtual void ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter()) override;
 
 #if WITH_EDITOR
+
 public:
 	virtual void UpdateNodeConfigText_Implementation() override;
 #endif

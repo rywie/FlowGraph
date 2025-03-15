@@ -28,8 +28,8 @@ protected:
 public:
 	virtual bool SupportsContextPins() const override { return true; }
 
-	virtual TArray<FFlowPin> GetContextInputs() override;
-	virtual TArray<FFlowPin> GetContextOutputs() override;
+	virtual TArray<FFlowPin> GetContextInputs() const override;
+	virtual TArray<FFlowPin> GetContextOutputs() const override;
 
 	virtual FString GetNodeDescription() const override;
 	virtual FString GetStatusString() const override;

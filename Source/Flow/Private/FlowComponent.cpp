@@ -20,10 +20,10 @@
 
 UFlowComponent::UFlowComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, RootFlow(nullptr)
-	, bAutoStartRootFlow(true)
-	, RootFlowMode(EFlowNetMode::Authority)
-	, bAllowMultipleInstances(true)
+	  , RootFlow(nullptr)
+	  , bAutoStartRootFlow(true)
+	  , RootFlowMode(EFlowNetMode::Authority)
+	  , bAllowMultipleInstances(true)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
@@ -469,7 +469,7 @@ UFlowAsset* UFlowComponent::GetRootFlowInstance() const
 	return nullptr;
 }
 
-void UFlowComponent::TriggerRootFlowCustomInput(const FName& EventName) const
+void UFlowComponent::TriggerRootFlowCustomInput(const FName& EventName, const FFlowParameter& FlowParameter) const
 {
 	if (RootFlow && IsFlowNetMode(RootFlowMode))
 	{
@@ -478,31 +478,31 @@ void UFlowComponent::TriggerRootFlowCustomInput(const FName& EventName) const
 			UFlowAsset* RootFlowInstance = FlowSubsystem->GetRootFlow(this);
 			if (IsValid(RootFlowInstance))
 			{
-				RootFlowInstance->TriggerCustomInput(EventName);
+				RootFlowInstance->TriggerCustomInput(EventName, FlowParameter);
 			}
 		}
 	}
 }
 
-void UFlowComponent::DispatchRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName)
+void UFlowComponent::DispatchRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter)
 {
-	BP_OnRootFlowCustomEvent(RootFlowInstance, EventName);
-	OnRootFlowCustomEvent(RootFlowInstance, EventName);
+	BP_OnRootFlowCustomEvent(RootFlowInstance, EventName, FlowParameter);
+	OnRootFlowCustomEvent(RootFlowInstance, EventName, FlowParameter);
 }
 
-void UFlowComponent::BP_OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName)
+void UFlowComponent::BP_OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter)
 {
-	BP_OnRootFlowCustomEvent(RootFlowInstance, EventName);
+	BP_OnRootFlowCustomEvent(RootFlowInstance, EventName, FlowParameter);
 }
 
-void UFlowComponent::OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName)
+void UFlowComponent::OnTriggerRootFlowOutputEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter)
 {
-	OnRootFlowCustomEvent(RootFlowInstance, EventName);
+	OnRootFlowCustomEvent(RootFlowInstance, EventName, FlowParameter);
 }
 
-void UFlowComponent::OnTriggerRootFlowOutputEventDispatcher(UFlowAsset* RootFlowInstance, const FName& EventName)
+void UFlowComponent::OnTriggerRootFlowOutputEventDispatcher(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter)
 {
-	DispatchRootFlowCustomEvent(RootFlowInstance, EventName);
+	DispatchRootFlowCustomEvent(RootFlowInstance, EventName, FlowParameter);
 }
 
 void UFlowComponent::SaveRootFlow(TArray<FFlowAssetSaveData>& SavedFlowInstances)
@@ -589,17 +589,17 @@ bool UFlowComponent::IsFlowNetMode(const EFlowNetMode NetMode) const
 {
 	switch (NetMode)
 	{
-		case EFlowNetMode::Any:
-			return true;
-		case EFlowNetMode::Authority:
-			return GetOwner()->HasAuthority();
-		case EFlowNetMode::ClientOnly:
-			return IsNetMode(NM_Client) && UFlowSettings::Get()->bCreateFlowSubsystemOnClients;
-		case EFlowNetMode::ServerOnly:
-			return IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer);
-		case EFlowNetMode::SinglePlayerOnly:
-			return IsNetMode(NM_Standalone);
-		default:
-			return false;
+	case EFlowNetMode::Any:
+		return true;
+	case EFlowNetMode::Authority:
+		return GetOwner()->HasAuthority();
+	case EFlowNetMode::ClientOnly:
+		return IsNetMode(NM_Client) && UFlowSettings::Get()->bCreateFlowSubsystemOnClients;
+	case EFlowNetMode::ServerOnly:
+		return IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer);
+	case EFlowNetMode::SinglePlayerOnly:
+		return IsNetMode(NM_Standalone);
+	default:
+		return false;
 	}
 }

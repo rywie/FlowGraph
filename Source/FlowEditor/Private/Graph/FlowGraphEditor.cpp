@@ -7,7 +7,7 @@
 #include "Graph/FlowGraphEditorSettings.h"
 #include "Graph/FlowGraphSchema_Actions.h"
 #include "Graph/Nodes/FlowGraphNode.h"
-#include "Nodes/Graph/FlowNode_SubGraph.h"
+#include "Nodes/Graph/FlowNode_AbstractSubGraph.h"
 
 #include "Debugger/FlowDebuggerSubsystem.h"
 
@@ -983,7 +983,7 @@ void SFlowGraphEditor::OnNodeDoubleClicked(class UEdGraphNode* Node) const
 
 				if (IsPIE())
 				{
-					if (UFlowNode_SubGraph* SubGraphNode = Cast<UFlowNode_SubGraph>(FlowNode))
+					if (UFlowNode_AbstractSubGraph* SubGraphNode = Cast<UFlowNode_AbstractSubGraph>(FlowNode))
 					{
 						const TWeakObjectPtr<UFlowAsset> SubFlowInstance = SubGraphNode->GetFlowAsset()->GetFlowInstance(SubGraphNode);
 						if (SubFlowInstance.IsValid())

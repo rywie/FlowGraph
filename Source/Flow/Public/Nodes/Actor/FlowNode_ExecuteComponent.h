@@ -57,7 +57,7 @@ public:
 	virtual void OnActivate() override;
 	virtual void Cleanup() override;
 	virtual void ForceFinishNode() override;
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter()) override;
 	// --
 
 	// UFlowNodeBase

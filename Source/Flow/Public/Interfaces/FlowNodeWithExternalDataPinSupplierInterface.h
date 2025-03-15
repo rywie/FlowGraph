@@ -22,11 +22,10 @@ class FLOW_API IFlowNodeWithExternalDataPinSupplierInterface
 	GENERATED_BODY()
 
 public:
-
 	// Set the external DataPinValueSupplier for this node to use.
 	virtual void SetDataPinValueSupplier(IFlowDataPinValueSupplierInterface* DataPinValueSupplier) = 0;
 
-	// Append the external InputPins for the external supplier to include in its own pins (eg, UFlowNode_Subgraph)
+	// Append the external InputPins for the external supplier to include in its own pins (eg, UFlowNode_AbstractSubGraph)
 	virtual bool TryAppendExternalInputPins(TArray<FFlowPin>& InOutPins) const { return false; }
 
 	// Get the IFlowDataPinValueSupplierInterface for the external supplier for this node

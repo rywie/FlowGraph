@@ -3,6 +3,7 @@
 #pragma once
 
 #include "UObject/Interface.h"
+#include "Nodes/FlowParameter.h"
 
 #include "FlowCoreExecutableInterface.generated.h"
 
@@ -19,12 +20,11 @@ class FLOW_API IFlowCoreExecutableInterface
 	GENERATED_BODY()
 
 public:
-
 	// Method called just after creating the node instance, while initializing the Flow Asset instance
 	// This happens before executing graph, only called during gameplay
 	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", DisplayName = "Initialize Instance")
 	void K2_InitializeInstance();
-	virtual void InitializeInstance() { Execute_K2_InitializeInstance(Cast<UObject>(this));  }
+	virtual void InitializeInstance() { Execute_K2_InitializeInstance(Cast<UObject>(this)); }
 
 	// Event called from UMKTFlowNode::DeinitializeInstance()
 	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", DisplayName = "Deinitialize Instance")
@@ -58,6 +58,6 @@ public:
 
 	// Event reacting on triggering Input pin
 	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", DisplayName = "Execute Input")
-	void K2_ExecuteInput(const FName& PinName);
-	virtual void ExecuteInput(const FName& PinName) { Execute_K2_ExecuteInput(Cast<UObject>(this), PinName); }
+	void K2_ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter());
+	virtual void ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter()) { Execute_K2_ExecuteInput(Cast<UObject>(this), PinName, FlowParameter); }
 };

@@ -19,13 +19,12 @@
  * A Flow Node is UObject-based node designed to handle entire gameplay feature within single node.
  */
 UCLASS(Abstract, Blueprintable, HideCategories = Object)
-class FLOW_API UFlowNode 
+class FLOW_API UFlowNode
 	: public UFlowNodeBase
-	, public IFlowDataPinValueSupplierInterface
-	, public IVisualLoggerDebugSnapshotInterface
+	  , public IFlowDataPinValueSupplierInterface
+	  , public IVisualLoggerDebugSnapshotInterface
 {
 	GENERATED_UCLASS_BODY()
-
 	friend class SFlowGraphNode;
 	friend class UFlowAsset;
 	friend class UFlowGraphNode;
@@ -33,8 +32,8 @@ class FLOW_API UFlowNode
 	friend class SFlowInputPinHandle;
 	friend class SFlowOutputPinHandle;
 
-//////////////////////////////////////////////////////////////////////////
-// Node
+	//////////////////////////////////////////////////////////////////////////
+	// Node
 
 #if WITH_EDITORONLY_DATA
 
@@ -74,7 +73,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "FlowNode")
 	const FGuid& GetGuid() const { return NodeGuid; }
 
-public:	
+public:
 	virtual bool CanFinishGraph() const { return false; }
 
 protected:
@@ -86,8 +85,8 @@ protected:
 	UPROPERTY()
 	EFlowSignalMode SignalMode;
 
-//////////////////////////////////////////////////////////////////////////
-// All created pins (default, class-specific and added by user)
+	//////////////////////////////////////////////////////////////////////////
+	// All created pins (default, class-specific and added by user)
 
 public:
 	static FFlowPin DefaultInputPin;
@@ -155,8 +154,8 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "FlowNode", meta = (DisplayName = "Can User Add Output"))
 	bool K2_CanUserAddOutput() const;
 
-//////////////////////////////////////////////////////////////////////////
-// Connections to other nodes
+	//////////////////////////////////////////////////////////////////////////
+	// Connections to other nodes
 
 protected:
 	// Map input/outputs to the connected node and input pin
@@ -172,7 +171,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category= "FlowNode")
 	TSet<UFlowNode*> GatherConnectedNodes() const;
-	
+
 	FName GetPinConnectedToNode(const FGuid& OtherNodeGuid);
 
 	UFUNCTION(BlueprintPure, Category= "FlowNode")
@@ -190,17 +189,15 @@ public:
 	static void RecursiveFindNodesByClass(UFlowNode* Node, const TSubclassOf<UFlowNode> Class, uint8 Depth, TArray<UFlowNode*>& OutNodes);
 
 protected:
-
 	// Slow and fast lookup functions, based on whether we are proactively caching the connections for quick lookup 
 	// in the Connections array (by PinCategory)
 	bool FindConnectedNodeForPinFast(const FName& FlowPinName, FGuid* FoundGuid = nullptr, FName* OutConnectedPinName = nullptr) const;
 	bool FindConnectedNodeForPinSlow(const FName& FlowPinName, FGuid* FoundGuid = nullptr, FName* OutConnectedPinName = nullptr) const;
 
-//////////////////////////////////////////////////////////////////////////
-// Data Pins
+	//////////////////////////////////////////////////////////////////////////
+	// Data Pins
 
 public:
-
 	// Map of DataPin Name to its Bound Property, 
 	// when using metadata tag 'BindOutputFlowDataPin' to bind properties to data pins for automatic supplier support
 	UPROPERTY(VisibleDefaultsOnly, AdvancedDisplay, Category = "FlowNode", meta = (GetByRef))
@@ -208,7 +205,7 @@ public:
 
 	const TMap<FName, FName>& GetPinNameToBoundPropertyNameMap() const { return PinNameToBoundPropertyNameMap; }
 
-#if WITH_EDITORONLY_DATA	
+#if WITH_EDITORONLY_DATA
 	UPROPERTY(VisibleDefaultsOnly, AdvancedDisplay, Category = "FlowNode", meta = (GetByRef))
 	TArray<FFlowPin> AutoInputDataPins;
 
@@ -224,7 +221,7 @@ public:
 	void SetAutoOutputDataPins(const TArray<FFlowPin>& AutoOutputPins);
 	const TArray<FFlowPin>& GetAutoInputDataPins() const { return AutoInputDataPins; }
 	const TArray<FFlowPin>& GetAutoOutputDataPins() const { return AutoOutputDataPins; }
-	
+
 	TArray<FFlowPin>& GetMutableAutoInputDataPins() { return AutoInputDataPins; }
 	TArray<FFlowPin>& GetMutableAutoOutputDataPins() { return AutoOutputDataPins; }
 #endif // WITH_EDITOR
@@ -253,7 +250,6 @@ public:
 	// --
 
 protected:
-
 	// Helper functions for the TrySupplyDataPin...() functions
 	bool TryFindPropertyByPinName(
 		const FName& PinName,
@@ -282,20 +278,20 @@ protected:
 	TFlowDataPinResultType TrySupplyDataPinAsStructType(const FName& PinName) const;
 
 	template <typename TFlowDataPinResultType, typename TFlowDataPinProperty, typename TUObjectType,
-		typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1>
+	          typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1>
 	TFlowDataPinResultType TrySupplyDataPinAsUObjectTypeCommon(const FName& PinName, const FProperty*& OutFoundProperty) const;
 
 	template <typename TFlowDataPinResultType, typename TFlowDataPinProperty, typename TUObjectType,
-		typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1,
-		typename TFieldPropertyWeakType2, typename TFieldPropertyLazyType3>
+	          typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1,
+	          typename TFieldPropertyWeakType2, typename TFieldPropertyLazyType3>
 	TFlowDataPinResultType TrySupplyDataPinAsUObjectType(const FName& PinName) const;
 
 	template <typename TFlowDataPinResultType, typename TFlowDataPinProperty, typename TUObjectType,
-		typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1>
+	          typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1>
 	TFlowDataPinResultType TrySupplyDataPinAsUClassType(const FName& PinName) const;
 
-//////////////////////////////////////////////////////////////////////////
-// Debugger
+	//////////////////////////////////////////////////////////////////////////
+	// Debugger
 
 protected:
 	static FString MissingIdentityTag;
@@ -303,8 +299,8 @@ protected:
 	static FString MissingClass;
 	static FString NoActorsFound;
 
-//////////////////////////////////////////////////////////////////////////
-// Executing node instance
+	//////////////////////////////////////////////////////////////////////////
+	// Executing node instance
 
 public:
 	bool bPreloaded;
@@ -328,23 +324,24 @@ public:
 	void TriggerFlush();
 
 protected:
-
 	// Trigger execution of input pin
-	void TriggerInput(const FName& PinName, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default);
+	void TriggerInput(const FName& PinName, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default, const FFlowParameter& FlowParameter = FFlowParameter());
 
 protected:
 	void Deactivate();
 
-	virtual void TriggerFirstOutput(const bool bFinish) override;
-	virtual void TriggerOutput(FName PinName, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default) override;
+	virtual void TriggerFirstOutput(const bool bFinish, const FFlowParameter& FlowParameter = FFlowParameter()) override;
+	virtual void TriggerOutput(FName PinName, const bool bFinish = false, const EFlowPinActivationType ActivationType = EFlowPinActivationType::Default,
+	                           const FFlowParameter& FlowParameter = FFlowParameter()) override;
+
 public:
-	virtual void Finish() override;
+	virtual void Finish(const FFlowParameter& FlowParameter = FFlowParameter()) override;
 
 private:
 	void ResetRecords();
 
-//////////////////////////////////////////////////////////////////////////
-// SaveGame support
+	//////////////////////////////////////////////////////////////////////////
+	// SaveGame support
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "FlowNode")
@@ -362,11 +359,12 @@ protected:
 
 	UFUNCTION(BlueprintNativeEvent, Category = "FlowNode")
 	void OnPassThrough();
-	
-//////////////////////////////////////////////////////////////////////////
-// Utils
+
+	//////////////////////////////////////////////////////////////////////////
+	// Utils
 
 #if WITH_EDITOR
+
 public:
 	UFlowNode* GetInspectedInstance() const;
 
@@ -632,7 +630,7 @@ TFlowDataPinResultType UFlowNode::TrySupplyDataPinAsAnyTextType(const FName& Pin
 
 		return SuppliedResult;
 	}
-	
+
 	// Get the value from a UE simple property type
 	if (const FNameProperty* NameProperty = CastField<FNameProperty>(FoundProperty))
 	{
@@ -794,7 +792,7 @@ TFlowDataPinResultType UFlowNode::TrySupplyDataPinAsStructType(const FName& PinN
 }
 
 template <typename TFlowDataPinResultType, typename TFlowDataPinProperty, typename TUObjectType,
-	typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1>
+          typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1>
 TFlowDataPinResultType UFlowNode::TrySupplyDataPinAsUObjectTypeCommon(const FName& PinName, const FProperty*& OutFoundProperty) const
 {
 	TFlowDataPinResultType SuppliedResult;
@@ -860,12 +858,12 @@ TFlowDataPinResultType UFlowNode::TrySupplyDataPinAsUObjectTypeCommon(const FNam
 }
 
 template <typename TFlowDataPinResultType, typename TFlowDataPinProperty, typename TUObjectType,
-		  typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1, typename TFieldPropertyWeakType2, typename TFieldPropertyLazyType3>
+          typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1, typename TFieldPropertyWeakType2, typename TFieldPropertyLazyType3>
 TFlowDataPinResultType UFlowNode::TrySupplyDataPinAsUObjectType(const FName& PinName) const
 {
 	// First execute TrySupplyDataPinAsUObjectTypeCommon to handle all of the shared cases between UObject and UClass properties:
 	const FProperty* FoundProperty = nullptr;
-	TFlowDataPinResultType SuppliedResult = 
+	TFlowDataPinResultType SuppliedResult =
 		TrySupplyDataPinAsUObjectTypeCommon<TFlowDataPinResultType, TFlowDataPinProperty, TUObjectType, TFieldPropertyObjectType0, TFieldPropertySoftObjectType1>(PinName, FoundProperty);
 
 	if (SuppliedResult.Result == EFlowDataPinResolveResult::FailedMismatchedType)
@@ -895,7 +893,7 @@ TFlowDataPinResultType UFlowNode::TrySupplyDataPinAsUObjectType(const FName& Pin
 }
 
 template <typename TFlowDataPinResultType, typename TFlowDataPinProperty, typename TUObjectType,
-	typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1>
+          typename TFieldPropertyObjectType0, typename TFieldPropertySoftObjectType1>
 TFlowDataPinResultType UFlowNode::TrySupplyDataPinAsUClassType(const FName& PinName) const
 {
 	const FProperty* FoundProperty = nullptr;

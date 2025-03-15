@@ -15,7 +15,7 @@ UFlowNode_LogicalAND::UFlowNode_LogicalAND(const FObjectInitializer& ObjectIniti
 	SetNumberedInputPins(0, 1);
 }
 
-void UFlowNode_LogicalAND::ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter /*= FFlowParameter()*/)
+void UFlowNode_LogicalAND::ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	ExecutedInputNames.Add(PinName);
 

@@ -10,7 +10,7 @@
 #include "FlowSubsystem.generated.h"
 
 class UFlowAsset;
-class UFlowNode_SubGraph;
+class UFlowNode_AbstractSubGraph;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSimpleFlowEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSimpleFlowComponentEvent, UFlowComponent*, Component);
@@ -34,7 +34,7 @@ public:
 
 	friend class UFlowAsset;
 	friend class UFlowComponent;
-	friend class UFlowNode_SubGraph;
+	friend class UFlowNode_AbstractSubGraph;
 
 private:
 	/* All asset templates with active instances */
@@ -47,7 +47,7 @@ private:
 
 	/* Assets instanced by Sub Graph nodes */
 	UPROPERTY()
-	TMap<TObjectPtr<UFlowNode_SubGraph>, TObjectPtr<UFlowAsset>> InstancedSubFlows;
+	TMap<TObjectPtr<UFlowNode_AbstractSubGraph>, TObjectPtr<UFlowAsset>> InstancedSubFlows;
 
 #if !UE_BUILD_SHIPPING
 public:
@@ -73,7 +73,7 @@ public:
 
 	/* Start the root Flow, graph that will eventually instantiate next Flow Graphs through the SubGraph node */
 	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem", meta = (DefaultToSelf = "Owner"))
-	virtual void StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true);
+	virtual void StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true, const FFlowParameter& FlowParameter = FFlowParameter());
 
 	virtual UFlowAsset* CreateRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true, const FString& NewInstanceName = FString());
 
@@ -90,8 +90,9 @@ public:
 	virtual void FinishAllRootFlows(UObject* Owner, const EFlowFinishPolicy FinishPolicy);
 
 protected:
-	UFlowAsset* CreateSubFlow(UFlowNode_SubGraph* SubGraphNode, const FString& SavedInstanceName = FString(), const bool bPreloading = false);
-	void RemoveSubFlow(UFlowNode_SubGraph* SubGraphNode, const EFlowFinishPolicy FinishPolicy);
+	UFlowAsset* CreateSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const FString& SavedInstanceName = FString(), const bool bPreloading = false,
+	                          const FFlowParameter& FlowParameter = FFlowParameter());
+	void RemoveSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const EFlowFinishPolicy FinishPolicy);
 
 public:
 	UFlowAsset* CreateFlowInstance(const TWeakObjectPtr<UObject> Owner, UFlowAsset* LoadedFlowAsset, FString NewInstanceName = FString());
@@ -114,7 +115,7 @@ public:
 
 	/* Returns assets instanced by Sub Graph nodes */
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem")
-	const TMap<UFlowNode_SubGraph*, UFlowAsset*>& GetInstancedSubFlows() const { return ObjectPtrDecay(InstancedSubFlows); }
+	const TMap<UFlowNode_AbstractSubGraph*, UFlowAsset*>& GetInstancedSubFlows() const { return ObjectPtrDecay(InstancedSubFlows); }
 
 	virtual UWorld* GetWorld() const override;
 
@@ -134,7 +135,7 @@ public:
 	virtual void LoadRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const FString& SavedAssetInstanceName);
 
 	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem")
-	virtual void LoadSubFlow(UFlowNode_SubGraph* SubGraphNode, const FString& SavedAssetInstanceName);
+	virtual void LoadSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const FString& SavedAssetInstanceName);
 
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem")
 	UFlowSaveGame* GetLoadedSaveGame() const { return LoadedSaveGame; }

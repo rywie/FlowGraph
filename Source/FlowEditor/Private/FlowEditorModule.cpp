@@ -39,7 +39,7 @@
 #include "Nodes/Actor/FlowNode_PlayLevelSequence.h"
 #include "Nodes/Graph/FlowNode_CustomInput.h"
 #include "Nodes/Graph/FlowNode_CustomOutput.h"
-#include "Nodes/Graph/FlowNode_SubGraph.h"
+#include "Nodes/Graph/FlowNode_AbstractSubGraph.h"
 
 #include "AssetToolsModule.h"
 #include "EdGraphUtilities.h"
@@ -224,7 +224,7 @@ void FFlowEditorModule::RegisterDetailCustomizations()
 		RegisterCustomClassLayout(UFlowNode_CustomInput::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FFlowNode_CustomInputDetails::MakeInstance));
 		RegisterCustomClassLayout(UFlowNode_CustomOutput::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FFlowNode_CustomOutputDetails::MakeInstance));
 		RegisterCustomClassLayout(UFlowNode_PlayLevelSequence::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FFlowNode_PlayLevelSequenceDetails::MakeInstance));
-	    RegisterCustomClassLayout(UFlowNode_SubGraph::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FFlowNode_SubGraphDetails::MakeInstance));
+	    RegisterCustomClassLayout(UFlowNode_AbstractSubGraph::StaticClass(), FOnGetDetailCustomizationInstance::CreateStatic(&FFlowNode_SubGraphDetails::MakeInstance));
 		RegisterCustomStructLayout(*FFlowActorOwnerComponentRef::StaticStruct(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FFlowActorOwnerComponentRefCustomization::MakeInstance));
 		RegisterCustomStructLayout(*FFlowPin::StaticStruct(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FFlowPinCustomization::MakeInstance));
 		RegisterCustomStructLayout(*FFlowNamedDataPinOutputProperty::StaticStruct(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FFlowNamedDataPinOutputPropertyCustomization::MakeInstance));

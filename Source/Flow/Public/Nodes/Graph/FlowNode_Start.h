@@ -12,23 +12,20 @@
 UCLASS(NotBlueprintable, NotPlaceable, meta = (DisplayName = "Start"))
 class FLOW_API UFlowNode_Start
 	: public UFlowNode_DefineProperties
-	, public IFlowNodeWithExternalDataPinSupplierInterface
+	  , public IFlowNodeWithExternalDataPinSupplierInterface
 {
 	GENERATED_UCLASS_BODY()
-
 	friend class UFlowAsset;
 
 protected:
-
 	// External DataPin Value Supplier
-	// (eg, the UFlowNode_SubGraph that instanced this Start node's flow asset)
+	// (eg, the UFlowNode_AbstractSubGraph that instanced this Start node's flow asset)
 	UPROPERTY(Transient)
 	TScriptInterface<IFlowDataPinValueSupplierInterface> FlowDataPinValueSupplierInterface;
 
 public:
-
 	// IFlowCoreExecutableInterface
-	virtual void ExecuteInput(const FName& PinName) override;
+	virtual void ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter()) override;
 	// --
 
 	// IFlowNodeWithExternalDataPinSupplierInterface
