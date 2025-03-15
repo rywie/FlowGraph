@@ -19,10 +19,17 @@ enum class EFlowNodeDoubleClickTarget : uint8
 UCLASS(Config = EditorPerProjectUserSettings, meta = (DisplayName = "Flow Graph"))
 class FLOWEDITOR_API UFlowGraphEditorSettings : public UDeveloperSettings
 {
-	GENERATED_UCLASS_BODY()
+	GENERATED_BODY()
+
+public:
+	UFlowGraphEditorSettings();
 
 	static UFlowGraphEditorSettings* Get() { return StaticClass()->GetDefaultObject<UFlowGraphEditorSettings>(); }
 
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+	
 	// Double-clicking a Flow Node might open relevant asset/code editor
 	UPROPERTY(config, EditAnywhere, Category = "Nodes")
 	EFlowNodeDoubleClickTarget NodeDoubleClickTarget;

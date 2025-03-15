@@ -6,19 +6,27 @@ public class FlowEditor : ModuleRules
 {
 	public FlowEditor(ReadOnlyTargetRules target) : base(target)
 	{
+		if (CppStandard is null || CppStandard != CppStandardVersion.Cpp20)
+		{
+			CppStandard = CppStandardVersion.Cpp20;
+		}
+
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new[]
 		{
+			"AssetSearch",
 			"EditorSubsystem",
 			"Flow",
+			"FlowDebugger",
 			"MessageLog"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new[]
 		{
+			"AIModule", // For BlueprintNodeHelpers::DescribeProperty (could be copy/pasted out to remove editor-only dependency)
 			"ApplicationCore",
-			"AssetSearch",
+			"AssetDefinition",
 			"AssetTools",
 			"BlueprintGraph",
 			"ClassViewer",
@@ -31,7 +39,9 @@ public class FlowEditor : ModuleRules
 			"EditorScriptingUtilities",
 			"EditorStyle",
 			"Engine",
+			"EngineAssetDefinitions",
 			"GraphEditor",
+			"GameplayTags",
 			"InputCore",
 			"Json",
 			"JsonUtilities",
@@ -50,6 +60,7 @@ public class FlowEditor : ModuleRules
 			"Slate",
 			"SlateCore",
 			"SourceControl",
+			"StructUtils",
 			"ToolMenus",
 			"UnrealEd"
 		});

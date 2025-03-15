@@ -16,19 +16,21 @@ class FLOW_API UFlowNode_Timer : public UFlowNode
 
 protected:
 	// If the value is closer to 0, Timer will complete in next tick
-	UPROPERTY(EditAnywhere, Category = "Timer", meta = (ClampMin = 0.0f))
+	UPROPERTY(EditAnywhere, Category = "Timer", meta = (ClampMin = 0.0f, DefaultForInputFlowPin, FlowPinType = Float))
 	float CompletionTime;
 
 	// this allows to trigger other nodes multiple times before completing the Timer
 	UPROPERTY(EditAnywhere, Category = "Timer", meta = (ClampMin = 0.0f))
 	float StepTime;
 
-	UPROPERTY(EditAnywhere, Category = "Timer")
-	bool bFinishFlow;
+	static FName INPIN_CompletionTime;
 
 private:
 	FTimerHandle CompletionTimerHandle;
 	FTimerHandle StepTimerHandle;
+
+	UPROPERTY(SaveGame)
+	float ResolvedCompletionTime;
 
 	UPROPERTY(SaveGame)
 	float SumOfSteps;
@@ -39,14 +41,14 @@ private:
 	UPROPERTY(SaveGame)
 	float RemainingStepTime;
 
-	UPROPERTY(SaveGame)
-	FFlowParameter CachedFlowParameter;
-
 protected:
-	virtual void ExecuteInput(const FName &PinName, const FFlowParameter &FlowParameter = FFlowParameter()) override;
+	virtual void InitializeInstance() override;
+	virtual void ExecuteInput(const FName& PinName) override;
 
-	virtual void SetTimer(const FFlowParameter &FlowParameter = FFlowParameter());
+	virtual void SetTimer();
 	virtual void Restart();
+
+	float ResolveCompletionTime() const;
 	
 private:
 	UFUNCTION()
@@ -55,9 +57,6 @@ private:
 	UFUNCTION()
 	void OnCompletion();
 
-	void OnParameterStep(const FFlowParameter &FlowParameter);
-	void OnParameterCompletion(const FFlowParameter &FlowParameter);
-
 protected:
 	virtual void Cleanup() override;
 
@@ -65,7 +64,10 @@ protected:
 	virtual void OnLoad_Implementation() override;
 	
 #if WITH_EDITOR
-	virtual FString GetNodeDescription() const override;
+public:
+	virtual void UpdateNodeConfigText_Implementation() override;
+
+protected:
 	virtual FString GetStatusString() const override;
 #endif
 };

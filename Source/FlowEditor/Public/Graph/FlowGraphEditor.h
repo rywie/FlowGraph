@@ -9,6 +9,7 @@
 
 class FFlowAssetEditor;
 class IDetailsView;
+class UFlowDebuggerSubsystem;
 
 /**
  *
@@ -29,8 +30,9 @@ protected:
 
 	TWeakPtr<FFlowAssetEditor> FlowAssetEditor;
 	TSharedPtr<IDetailsView> DetailsView;
-
 	TSharedPtr<FUICommandList> CommandList;
+
+	TWeakObjectPtr<UFlowDebuggerSubsystem> DebuggerSubsystem;
 
 public:
 	void Construct(const FArguments& InArgs, const TSharedPtr<FFlowAssetEditor> InAssetEditor);
@@ -48,9 +50,11 @@ private:
 	void OnCreateComment() const;
 
 public:
+	virtual bool IsTabFocused() const;
+	
 	static bool CanEdit();
 	static bool IsPIE();
-	virtual bool IsTabFocused() const;
+	static bool IsPlaySessionPaused();
 
 	virtual void SelectSingleNode(UEdGraphNode* Node);
 
@@ -65,18 +69,23 @@ public:
 protected:
 	virtual bool CanSelectAllNodes() const { return true; }
 
-	void ReconnectExecPins(const UFlowGraphNode* Node);
+	static void ReconnectExecPins(const UFlowGraphNode* Node);
 	virtual void DeleteSelectedNodes();
 	virtual void DeleteSelectedDuplicableNodes();
 	virtual bool CanDeleteNodes() const;
 
 	virtual void CopySelectedNodes() const;
+	static void PrepareFlowGraphNodeForCopy(UFlowGraphNode& FlowGraphNode, const int32 ParentEdNodeIndex, FGraphPanelSelectionSet& NewSelectedNodes);
 	virtual bool CanCopyNodes() const;
 
 	virtual void CutSelectedNodes();
 	virtual bool CanCutNodes() const;
 
 	virtual void PasteNodes();
+
+	static bool CanPasteNodesAsSubNodes(const TSet<UEdGraphNode*>& NodesToPaste, const UFlowGraphNode& PasteTargetNode);
+	static TSet<UEdGraphNode*> ImportNodesToPasteFromClipboard(UFlowGraph& FlowGraph, FString& OutTextToImport);
+	TArray<UFlowGraphNode*> DerivePasteTargetNodesFromSelectedNodes() const;
 
 public:
 	virtual void PasteNodesHere(const FVector2D& Location);
@@ -89,8 +98,8 @@ protected:
 	virtual void OnNodeDoubleClicked(class UEdGraphNode* Node) const;
 	virtual void OnNodeTitleCommitted(const FText& NewText, ETextCommit::Type CommitInfo, UEdGraphNode* NodeBeingChanged);
 
-	virtual void RefreshContextPins() const;
-	virtual bool CanRefreshContextPins() const;
+	virtual void ReconstructNode() const;
+	virtual bool CanReconstructNode() const;
 
 private:
 	void AddInput() const;
@@ -117,7 +126,7 @@ private:
 	void OnEnableBreakpoint() const;
 	void OnEnablePinBreakpoint();
 
-	bool CanEnableBreakpoint();
+	bool CanEnableBreakpoint() const;
 	bool CanEnablePinBreakpoint();
 
 	void OnDisableBreakpoint() const;

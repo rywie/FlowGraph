@@ -10,7 +10,7 @@ UFlowNode_ExecutionSequence::UFlowNode_ExecutionSequence(const FObjectInitialize
 {
 #if WITH_EDITOR
 	Category = TEXT("Route");
-	NodeStyle = EFlowNodeStyle::Logic;
+	NodeDisplayStyle = FlowNodeStyle::Logic;
 #endif
 
 	SetNumberedOutputPins(0, 1);
@@ -56,6 +56,8 @@ void UFlowNode_ExecutionSequence::OnLoad_Implementation()
 void UFlowNode_ExecutionSequence::Cleanup()
 {
 	ExecutedConnections.Empty();
+
+	Super::Cleanup();
 }
 
 void UFlowNode_ExecutionSequence::ExecuteNewConnections()

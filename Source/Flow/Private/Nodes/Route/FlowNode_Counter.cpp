@@ -11,7 +11,7 @@ UFlowNode_Counter::UFlowNode_Counter(const FObjectInitializer& ObjectInitializer
 {
 #if WITH_EDITOR
 	Category = TEXT("Route");
-	NodeStyle = EFlowNodeStyle::Condition;
+	NodeDisplayStyle = FlowNodeStyle::Condition;
 #endif
 
 	InputPins.Empty();
@@ -65,6 +65,8 @@ void UFlowNode_Counter::ExecuteInput(const FName &PinName, const FFlowParameter 
 void UFlowNode_Counter::Cleanup()
 {
 	CurrentSum = 0;
+
+	Super::Cleanup();
 }
 
 #if WITH_EDITOR
