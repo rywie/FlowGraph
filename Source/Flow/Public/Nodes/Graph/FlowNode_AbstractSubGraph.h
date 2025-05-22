@@ -104,5 +104,6 @@ public:
 
 protected:
 	void SubscribeToAssetChanges();
+	void UnsubscribeToAssetChanges();
 #endif
 };

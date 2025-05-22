@@ -294,6 +294,14 @@ void UFlowNode_AbstractSubGraph::SubscribeToAssetChanges()
 		});
 	}
 }
+
+void UFlowNode_AbstractSubGraph::UnsubscribeToAssetChanges()
+{
+	if (const TSoftObjectPtr<UFlowAsset> Asset = GetSubAsset())
+	{
+		Asset->OnSubGraphReconstructionRequested.Unbind();
+	}
+}
 #endif
 
 #undef LOCTEXT_NAMESPACE
