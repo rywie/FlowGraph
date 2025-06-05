@@ -12,7 +12,8 @@
 #include "Nodes/Graph/FlowNode_CustomInput.h"
 #include "Nodes/Graph/FlowNode_CustomOutput.h"
 #include "Nodes/Graph/FlowNode_Start.h"
-#include "Nodes/Graph/FlowNode_AbstractSubGraph.h"
+#include "Nodes/Graph/FlowNode_SubGraph.h"
+#include "Nodes/Graph/FlowNode_SubGraph_Interface.h"
 
 #include "Engine/World.h"
 #include "Serialization/MemoryReader.h"
@@ -1111,27 +1112,32 @@ void UFlowAsset::BroadcastRuntimeMessageAdded(const TSharedRef<FTokenizedMessage
 }
 #endif // WITH_EDITOR
 
-void UFlowAsset::InitializeInstance(const TWeakObjectPtr<UObject> InOwner, UFlowAsset& InTemplateAsset)
+void UFlowAsset::InitializeInstance(const TWeakInterfacePtr<IFlowAssetOwnerInterface> InOwnerInterface, UFlowAsset& InTemplateAsset)
 {
 	check(!IsInstanceInitialized());
 
-	Owner = InOwner;
+	OwnerInterface = InOwnerInterface;
 	TemplateAsset = &InTemplateAsset;
 
-	for (TPair<FGuid, TObjectPtr<UFlowNode>>& Node : Nodes)
+	if (OwnerInterface.IsValid())
 	{
-		UFlowNode* NewNodeInstance = NewObject<UFlowNode>(this, Node.Value->GetClass(), NAME_None, RF_Transient, Node.Value, false, nullptr);
-		Node.Value = NewNodeInstance;
-
-		if (UFlowNode_CustomInput* CustomInput = Cast<UFlowNode_CustomInput>(NewNodeInstance))
+		for (TPair<FGuid, TObjectPtr<UFlowNode>>& Node : Nodes)
 		{
-			if (!CustomInput->EventName.IsNone())
-			{
-				CustomInputNodes.Emplace(CustomInput);
-			}
-		}
+			UFlowNode* NewNodeInstance = NewObject<UFlowNode>(this, Node.Value->GetClass(), NAME_None, RF_Transient, Node.Value, false, nullptr);
+			Node.Value = NewNodeInstance;
 
-		NewNodeInstance->InitializeInstance();
+			if (UFlowNode_CustomInput* CustomInput = Cast<UFlowNode_CustomInput>(NewNodeInstance))
+			{
+				if (!CustomInput->EventName.IsNone())
+				{
+					CustomInputNodes.Emplace(CustomInput);
+				}
+			}
+
+			NewNodeInstance->InitializeInstance();
+
+			OwnerInterface->OnNodeInstanceInitialized(NewNodeInstance);
+		}
 	}
 }
 
@@ -1217,6 +1223,11 @@ void UFlowAsset::FinishFlow(const EFlowFinishPolicy InFinishPolicy, const bool b
 	{
 		DeinitializeInstance();
 	}
+
+	if (OwnerInterface.IsValid())
+	{
+		OwnerInterface->OnRootFlowFinish();
+	}
 }
 
 bool UFlowAsset::HasStartedFlow() const
@@ -1235,21 +1246,37 @@ AActor* UFlowAsset::TryFindActorOwner() const
 	return nullptr;
 }
 
-TWeakObjectPtr<UFlowAsset> UFlowAsset::GetFlowInstance(UFlowNode_AbstractSubGraph* SubGraphNode) const
+TWeakObjectPtr<UFlowAsset> UFlowAsset::GetFlowInstance(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface) const
 {
-	return ActiveSubGraphs.FindRef(SubGraphNode);
+	if (const IFlowNodeSubGraphInterface* Interface = SubGraphInterface.GetInterface())
+	{
+		const UFlowNode* FlowNode = Interface->GetOwningFlowNode();
+		if (IsValid(FlowNode))
+		{
+			return ActiveSubGraphs.FindRef(FlowNode);
+		}
+	}
+
+	return {};
 }
 
-void UFlowAsset::TriggerCustomInput_FromSubGraph(UFlowNode_AbstractSubGraph* SubGraphNode, const FName& EventName, const FFlowParameter& FlowParameter) const
+void UFlowAsset::TriggerCustomInput_FromSubGraph(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const FName& EventName, const FFlowParameter& FlowParameter) const
 {
 	// NOTE (gtaylor) Custom Input nodes cannot currently add data pins (like Start or DefineProperties nodes can)
 	// but we may want to allow them to source parameters, so I am providing the subgraph node as the 
 	// IFlowDataPinValueSupplierInterface when triggering the node (even though it's not used at this time).
 
-	const TWeakObjectPtr<UFlowAsset> FlowInstance = ActiveSubGraphs.FindRef(SubGraphNode);
-	if (FlowInstance.IsValid())
+	if (const IFlowNodeSubGraphInterface* Interface = SubGraphInterface.GetInterface())
 	{
-		FlowInstance->TriggerCustomInput(EventName, FlowParameter, SubGraphNode);
+		const UFlowNode* FlowNode = Interface->GetOwningFlowNode();
+		if (IsValid(FlowNode))
+		{
+			const TWeakObjectPtr<UFlowAsset> FlowInstance = ActiveSubGraphs.FindRef(FlowNode);
+			if (FlowInstance.IsValid())
+			{
+				FlowInstance->TriggerCustomInput(EventName, FlowParameter, Interface->GetFlowDataPinValueSupplierInterface().GetInterface());
+			}
+		}
 	}
 }
 
@@ -1277,10 +1304,15 @@ void UFlowAsset::TriggerCustomInput(const FName& EventName, const FFlowParameter
 
 void UFlowAsset::TriggerCustomOutput(const FName& EventName, const FFlowParameter& FlowParameter)
 {
-	if (NodeOwningThisAssetInstance.IsValid())
+	if (InterfaceOwningThisAssetInstance.IsValid())
 	{
-		// it's a SubGraph
-		NodeOwningThisAssetInstance->TriggerOutput(EventName, false, EFlowPinActivationType::Default, FlowParameter);
+		UFlowNode* OwningFlowNode = InterfaceOwningThisAssetInstance->GetOwningFlowNode();
+		if (IsValid(OwningFlowNode))
+		{
+			// it's a SubGraph
+
+			OwningFlowNode->TriggerOutput(EventName, false, EFlowPinActivationType::Default, FlowParameter);
+		}
 	}
 	else
 	{
@@ -1310,16 +1342,16 @@ void UFlowAsset::TriggerFinishOutput(UFlowNodeBase* Node, const FFlowParameter& 
 {
 	if (ActiveNodes.Contains(Node))
 	{
-		if (NodeOwningThisAssetInstance.IsValid())
+		if (InterfaceOwningThisAssetInstance.IsValid())
 		{
-			NodeOwningThisAssetInstance.Get()->OnFinishOutput(FlowParameter);
+			InterfaceOwningThisAssetInstance.Get()->OnFinishOutput(FlowParameter);
 		}
 	}
 }
 
-void UFlowAsset::TriggerEntryInput(UFlowNode_AbstractSubGraph* SubGraphNode, const FFlowParameter& FlowParameter) const
+void UFlowAsset::TriggerEntryInput(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const FFlowParameter& FlowParameter) const
 {
-	const TWeakObjectPtr<UFlowAsset> Asset = GetFlowInstance(SubGraphNode);
+	const TWeakObjectPtr<UFlowAsset> Asset = GetFlowInstance(SubGraphInterface);
 	if (Asset.IsValid())
 	{
 		if (UFlowNode* DefaultEntryNode = Asset->GetDefaultEntryNode())
@@ -1338,22 +1370,29 @@ void UFlowAsset::FinishNode(UFlowNode* Node, const FFlowParameter& FlowParameter
 		// if graph reached Finish and this asset instance was created by SubGraph node
 		if (Node->CanFinishGraph())
 		{
-			if (NodeOwningThisAssetInstance.IsValid())
+			if (InterfaceOwningThisAssetInstance.IsValid())
 			{
-				NodeOwningThisAssetInstance.Get()->TriggerFirstOutput(true, FlowParameter);
-
-				return;
+				UFlowNode* OwningFlowNode = InterfaceOwningThisAssetInstance->GetOwningFlowNode();
+				if (IsValid(OwningFlowNode))
+				{
+					OwningFlowNode->TriggerFirstOutput(true, FlowParameter);
+					return;
+				}
 			}
 
 			// if this instance is a Root Flow, we need to deregister it from the subsystem first
-			if (Owner.IsValid())
+			if (OwnerInterface.IsValid())
 			{
-				const TSet<UFlowAsset*>& RootFlowInstances = GetFlowSubsystem()->GetRootInstancesByOwner(Owner.Get());
-				if (RootFlowInstances.Contains(this))
+				const UObject* Owner = OwnerInterface->GetAssetOwningObject();
+				if (IsValid(Owner))
 				{
-					GetFlowSubsystem()->FinishRootFlow(Owner.Get(), TemplateAsset, EFlowFinishPolicy::Keep);
+					const TSet<UFlowAsset*>& RootFlowInstances = GetFlowSubsystem()->GetRootInstancesByOwner(Owner);
+					if (RootFlowInstances.Contains(this))
+					{
+						GetFlowSubsystem()->FinishRootFlow(OwnerInterface.ToScriptInterface(), TemplateAsset, EFlowFinishPolicy::Keep);
 
-					return;
+						return;
+					}
 				}
 			}
 
@@ -1382,14 +1421,14 @@ FName UFlowAsset::GetDisplayName() const
 	return GetFName();
 }
 
-UFlowNode_AbstractSubGraph* UFlowAsset::GetNodeOwningThisAssetInstance() const
+UFlowNode* UFlowAsset::GetNodeOwningThisAssetInstance() const
 {
-	return NodeOwningThisAssetInstance.Get();
+	return InterfaceOwningThisAssetInstance.IsValid() ? InterfaceOwningThisAssetInstance.Get()->GetOwningFlowNode() : nullptr;
 }
 
 UFlowAsset* UFlowAsset::GetParentInstance() const
 {
-	return NodeOwningThisAssetInstance.IsValid() ? NodeOwningThisAssetInstance.Get()->GetFlowAsset() : nullptr;
+	return InterfaceOwningThisAssetInstance.IsValid() ? InterfaceOwningThisAssetInstance.Get()->GetOwningFlowAsset() : nullptr;
 }
 
 FFlowAssetSaveData UFlowAsset::SaveInstance(TArray<FFlowAssetSaveData>& SavedFlowInstances)
@@ -1409,13 +1448,18 @@ FFlowAssetSaveData UFlowAsset::SaveInstance(TArray<FFlowAssetSaveData>& SavedFlo
 		if (Node && Node->ActivationState == EFlowNodeState::Active)
 		{
 			// iterate SubGraphs
-			if (UFlowNode_AbstractSubGraph* SubGraphNode = Cast<UFlowNode_AbstractSubGraph>(Node))
+
+			if (Node->GetClass()->ImplementsInterface(UFlowNodeSubGraphInterface::StaticClass()))
 			{
-				const TWeakObjectPtr<UFlowAsset> SubFlowInstance = GetFlowInstance(SubGraphNode);
-				if (SubFlowInstance.IsValid())
+				if (IFlowNodeSubGraphInterface* SubGraphInterface = Cast<IFlowNodeSubGraphInterface>(Node))
 				{
-					const FFlowAssetSaveData SubAssetRecord = SubFlowInstance->SaveInstance(SavedFlowInstances);
-					SubGraphNode->SavedAssetInstanceName = SubAssetRecord.InstanceName;
+					const TWeakInterfacePtr<IFlowNodeSubGraphInterface> SubGraphInterfaceWeakPtr = {SubGraphInterface};
+					const TWeakObjectPtr<UFlowAsset> SubFlowInstance = GetFlowInstance(SubGraphInterfaceWeakPtr.ToScriptInterface());
+					if (SubFlowInstance.IsValid())
+					{
+						const FFlowAssetSaveData SubAssetRecord = SubFlowInstance->SaveInstance(SavedFlowInstances);
+						SubGraphInterface->OnFlowAssetSave(SubAssetRecord);
+					}
 				}
 			}
 

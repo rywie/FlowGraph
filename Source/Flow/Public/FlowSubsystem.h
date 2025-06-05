@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "UObject/WeakInterfacePtr.h"
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
@@ -9,8 +10,10 @@
 #include "FlowComponent.h"
 #include "FlowSubsystem.generated.h"
 
+class UFlowNode;
 class UFlowAsset;
-class UFlowNode_AbstractSubGraph;
+class IFlowAssetOwnerInterface;
+class IFlowNodeSubGraphInterface;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSimpleFlowEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSimpleFlowComponentEvent, UFlowComponent*, Component);
@@ -43,13 +46,14 @@ private:
 
 	/* Assets instanced by object from another system, i.e. World Settings or Player Controller */
 	UPROPERTY()
-	TMap<TObjectPtr<UFlowAsset>, TWeakObjectPtr<UObject>> RootInstances;
+	TMap<TObjectPtr<UFlowAsset>, TScriptInterface<IFlowAssetOwnerInterface>> RootInstances;
 
 	/* Assets instanced by Sub Graph nodes */
 	UPROPERTY()
-	TMap<TObjectPtr<UFlowNode_AbstractSubGraph>, TObjectPtr<UFlowAsset>> InstancedSubFlows;
+	TMap<TObjectPtr<UFlowNode>, TObjectPtr<UFlowAsset>> InstancedSubFlows;
 
 #if !UE_BUILD_SHIPPING
+
 public:
 	/* Called after creating the first instance of given Flow Asset */
 	static FNativeFlowAssetEvent OnInstancedTemplateAdded;
@@ -72,30 +76,32 @@ public:
 	virtual void AbortActiveFlows();
 
 	/* Start the root Flow, graph that will eventually instantiate next Flow Graphs through the SubGraph node */
-	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem", meta = (DefaultToSelf = "Owner"))
-	virtual void StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true, const FFlowParameter& FlowParameter = FFlowParameter());
+	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem")
+	virtual void StartRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true,
+	                           const FFlowParameter& FlowParameter = FFlowParameter());
 
-	virtual UFlowAsset* CreateRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true, const FString& NewInstanceName = FString());
-
-	/* Finish Policy value is read by Flow Node
-	 * Nodes have opportunity to terminate themselves differently if Flow Graph has been aborted
-	 * Example: Spawn node might despawn all actors if Flow Graph is aborted, not completed */
-	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem", meta = (DefaultToSelf = "Owner"))
-	virtual void FinishRootFlow(UObject* Owner, UFlowAsset* TemplateAsset, const EFlowFinishPolicy FinishPolicy);
+	virtual UFlowAsset* CreateRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true,
+	                                   const FString& NewInstanceName = FString());
 
 	/* Finish Policy value is read by Flow Node
 	 * Nodes have opportunity to terminate themselves differently if Flow Graph has been aborted
 	 * Example: Spawn node might despawn all actors if Flow Graph is aborted, not completed */
 	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem", meta = (DefaultToSelf = "Owner"))
-	virtual void FinishAllRootFlows(UObject* Owner, const EFlowFinishPolicy FinishPolicy);
+	virtual void FinishRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* TemplateAsset, const EFlowFinishPolicy FinishPolicy);
+
+	/* Finish Policy value is read by Flow Node
+	 * Nodes have opportunity to terminate themselves differently if Flow Graph has been aborted
+	 * Example: Spawn node might despawn all actors if Flow Graph is aborted, not completed */
+	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem", meta = (DefaultToSelf = "Owner"))
+	virtual void FinishAllRootFlows(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, const EFlowFinishPolicy FinishPolicy);
 
 protected:
-	UFlowAsset* CreateSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const FString& SavedInstanceName = FString(), const bool bPreloading = false,
+	UFlowAsset* CreateSubFlow(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const FString& SavedInstanceName = FString(), const bool bPreloading = false,
 	                          const FFlowParameter& FlowParameter = FFlowParameter());
-	void RemoveSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const EFlowFinishPolicy FinishPolicy);
+	void RemoveSubFlow(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const EFlowFinishPolicy FinishPolicy);
 
 public:
-	UFlowAsset* CreateFlowInstance(const TWeakObjectPtr<UObject> Owner, UFlowAsset* LoadedFlowAsset, FString NewInstanceName = FString());
+	UFlowAsset* CreateFlowInstance(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* LoadedFlowAsset, FString NewInstanceName = FString());
 
 protected:
 	virtual void AddInstancedTemplate(UFlowAsset* Template);
@@ -105,7 +111,7 @@ public:
 	/* Returns all assets instanced by object from another system like World Settings */
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem")
 	TMap<UObject*, UFlowAsset*> GetRootInstances() const;
-	
+
 	/* Returns asset instanced by specific object */
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem")
 	TSet<UFlowAsset*> GetRootInstancesByOwner(const UObject* Owner) const;
@@ -115,12 +121,12 @@ public:
 
 	/* Returns assets instanced by Sub Graph nodes */
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem")
-	const TMap<UFlowNode_AbstractSubGraph*, UFlowAsset*>& GetInstancedSubFlows() const { return ObjectPtrDecay(InstancedSubFlows); }
+	const TMap<UFlowNode*, UFlowAsset*>& GetInstancedSubFlows() const { return ObjectPtrDecay(InstancedSubFlows); }
 
 	virtual UWorld* GetWorld() const override;
 
-//////////////////////////////////////////////////////////////////////////
-// SaveGame support
+	//////////////////////////////////////////////////////////////////////////
+	// SaveGame support
 
 	UPROPERTY(BlueprintAssignable, Category = "FlowSubsystem")
 	FSimpleFlowEvent OnSaveGame;
@@ -135,13 +141,13 @@ public:
 	virtual void LoadRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const FString& SavedAssetInstanceName);
 
 	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem")
-	virtual void LoadSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const FString& SavedAssetInstanceName);
+	virtual void LoadSubFlow(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const FString& SavedAssetInstanceName);
 
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem")
 	UFlowSaveGame* GetLoadedSaveGame() const { return LoadedSaveGame; }
 
-//////////////////////////////////////////////////////////////////////////
-// Component Registry
+	//////////////////////////////////////////////////////////////////////////
+	// Component Registry
 
 protected:
 	/* All the Flow Components currently existing in the world */
@@ -194,7 +200,8 @@ public:
 	* @param bExactMatch If true, the tag has to be exactly present, if false then TagContainer will include it's parent tags while matching. Be careful, using latter option may be very expensive, as the search cost is proportional to the number of registered Gameplay Tags!
 	 */
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem", meta = (DeterminesOutputType = "ComponentClass"))
-	TSet<UFlowComponent*> GetFlowComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<UFlowComponent> ComponentClass, const bool bExactMatch = true) const;
+	TSet<UFlowComponent*> GetFlowComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<UFlowComponent> ComponentClass,
+	                                              const bool bExactMatch = true) const;
 
 	/**
 	 * Returns all registered actors with Flow Component identified by given tag
@@ -236,7 +243,8 @@ public:
 	 * @param bExactMatch If true, the tag has to be exactly present, if false then TagContainer will include it's parent tags while matching. Be careful, using latter option may be very expensive, as the search cost is proportional to the number of registered Gameplay Tags!
 	 */
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem", meta = (DeterminesOutputType = "ActorClass"))
-	TMap<AActor*, UFlowComponent*> GetFlowActorsAndComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<AActor> ActorClass, const bool bExactMatch = true) const;
+	TMap<AActor*, UFlowComponent*> GetFlowActorsAndComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<AActor> ActorClass,
+	                                                                const bool bExactMatch = true) const;
 
 	/**
 	 * Returns all registered Flow Components identified by given tag

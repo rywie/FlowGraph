@@ -7,7 +7,7 @@
 #include "FlowLogChannels.h"
 #include "FlowSave.h"
 #include "FlowSettings.h"
-#include "Nodes/Graph/FlowNode_AbstractSubGraph.h"
+#include "Nodes/Graph/FlowNode_SubGraph_Interface.h"
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -76,11 +76,12 @@ void UFlowSubsystem::AbortActiveFlows()
 	RootInstances.Empty();
 }
 
-void UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances /* = true */, const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
+void UFlowSubsystem::StartRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances /* = true */,
+                                   const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (FlowAsset)
 	{
-		if (UFlowAsset* NewFlow = CreateRootFlow(Owner, FlowAsset, bAllowMultipleInstances))
+		if (UFlowAsset* NewFlow = CreateRootFlow(OwnerInterface, FlowAsset, bAllowMultipleInstances))
 		{
 			// todo: (gtaylor) In the future, we may want to provide a way to set a data pin value supplier
 			// for the root flow graph.
@@ -91,19 +92,31 @@ void UFlowSubsystem::StartRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const 
 	else
 	{
 		FMessageLog("PIE").Error(LOCTEXT("StartRootFlowNullAsset", "Attempted to start Root Flow with a null asset."))
-		                  ->AddToken(FUObjectToken::Create(Owner));
+		                  ->AddToken(FUObjectToken::Create(OwnerInterface.GetObject()));
 	}
 #endif
 }
 
-UFlowAsset* UFlowSubsystem::CreateRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances, const FString& NewInstanceName)
+UFlowAsset* UFlowSubsystem::CreateRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances, const FString& NewInstanceName)
 {
-	for (const TPair<UFlowAsset*, TWeakObjectPtr<UObject>>& RootInstance : ObjectPtrDecay(RootInstances))
+	if (IsValid(OwnerInterface.GetObject()) == false)
 	{
-		if (Owner == RootInstance.Value.Get() && FlowAsset == RootInstance.Key->GetTemplateAsset())
+		UE_LOG(LogFlow, Warning, TEXT("Unable to start Root Flow due to undefined Owner Interface"));
+		return nullptr;
+	}
+
+	UObject* Owner = OwnerInterface->GetAssetOwningObject();
+
+	for (const TPair<UFlowAsset*, TScriptInterface<IFlowAssetOwnerInterface>>& RootInstance : ObjectPtrDecay(RootInstances))
+	{
+		if (IsValid(RootInstance.Value.GetObject()))
 		{
-			UE_LOG(LogFlow, Warning, TEXT("Attempted to start Root Flow for the same Owner again. Owner: %s. Flow Asset: %s."), *Owner->GetName(), *FlowAsset->GetName());
-			return nullptr;
+			const UObject* RootInstanceOwner = RootInstance.Value->GetAssetOwningObject();
+			if (Owner == RootInstanceOwner && FlowAsset == RootInstance.Key->GetTemplateAsset())
+			{
+				UE_LOG(LogFlow, Warning, TEXT("Attempted to start Root Flow for the same Owner again. Owner: %s. Flow Asset: %s."), *Owner->GetName(), *FlowAsset->GetName());
+				return nullptr;
+			}
 		}
 	}
 
@@ -116,22 +129,33 @@ UFlowAsset* UFlowSubsystem::CreateRootFlow(UObject* Owner, UFlowAsset* FlowAsset
 	UFlowAsset* NewFlow = CreateFlowInstance(Owner, FlowAsset, NewInstanceName);
 	if (NewFlow)
 	{
-		RootInstances.Add(NewFlow, Owner);
+		RootInstances.Add(NewFlow, OwnerInterface);
 	}
 
 	return NewFlow;
 }
 
-void UFlowSubsystem::FinishRootFlow(UObject* Owner, UFlowAsset* TemplateAsset, const EFlowFinishPolicy FinishPolicy)
+void UFlowSubsystem::FinishRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* TemplateAsset, const EFlowFinishPolicy FinishPolicy)
 {
+	if (IsValid(OwnerInterface.GetObject()) == false)
+	{
+		UE_LOG(LogFlow, Warning, TEXT("Unable to finish Root Flow due to undefined Owner Interface"));
+		return;
+	}
+
 	UFlowAsset* InstanceToFinish = nullptr;
 
-	for (TPair<TObjectPtr<UFlowAsset>, TWeakObjectPtr<UObject>>& RootInstance : RootInstances)
+	const UObject* Owner = OwnerInterface->GetAssetOwningObject();
+	for (TPair<TObjectPtr<UFlowAsset>, TScriptInterface<IFlowAssetOwnerInterface>>& RootInstance : RootInstances)
 	{
-		if (Owner && Owner == RootInstance.Value.Get() && RootInstance.Key && RootInstance.Key->GetTemplateAsset() == TemplateAsset)
+		if (IsValid(RootInstance.Value.GetObject()))
 		{
-			InstanceToFinish = RootInstance.Key;
-			break;
+			const UObject* RootInstanceOwner = RootInstance.Value->GetAssetOwningObject();
+			if (Owner && Owner == RootInstanceOwner && RootInstance.Key && RootInstance.Key->GetTemplateAsset() == TemplateAsset)
+			{
+				InstanceToFinish = RootInstance.Key;
+				break;
+			}
 		}
 	}
 
@@ -142,15 +166,25 @@ void UFlowSubsystem::FinishRootFlow(UObject* Owner, UFlowAsset* TemplateAsset, c
 	}
 }
 
-void UFlowSubsystem::FinishAllRootFlows(UObject* Owner, const EFlowFinishPolicy FinishPolicy)
+void UFlowSubsystem::FinishAllRootFlows(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, const EFlowFinishPolicy FinishPolicy)
 {
+	if (IsValid(OwnerInterface.GetObject()) == false)
+	{
+		return;
+	}
+
 	TArray<UFlowAsset*> InstancesToFinish;
 
-	for (TPair<TObjectPtr<UFlowAsset>, TWeakObjectPtr<UObject>>& RootInstance : RootInstances)
+	const UObject* Owner = OwnerInterface->GetAssetOwningObject();
+	for (TPair<TObjectPtr<UFlowAsset>, TScriptInterface<IFlowAssetOwnerInterface>>& RootInstance : RootInstances)
 	{
-		if (Owner && Owner == RootInstance.Value.Get() && RootInstance.Key)
+		if (IsValid(RootInstance.Value.GetObject()))
 		{
-			InstancesToFinish.Emplace(RootInstance.Key);
+			const UObject* RootInstanceOwner = RootInstance.Value->GetAssetOwningObject();
+			if (Owner && Owner == RootInstanceOwner && RootInstance.Key)
+			{
+				InstancesToFinish.Emplace(RootInstance.Key);
+			}
 		}
 	}
 
@@ -161,19 +195,22 @@ void UFlowSubsystem::FinishAllRootFlows(UObject* Owner, const EFlowFinishPolicy 
 	}
 }
 
-UFlowAsset* UFlowSubsystem::CreateSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const FString& SavedInstanceName, const bool bPreloading /* = false */,
+UFlowAsset* UFlowSubsystem::CreateSubFlow(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const FString& SavedInstanceName, const bool bPreloading /* = false */,
                                           const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	UFlowAsset* NewInstance = nullptr;
 
-	if (!InstancedSubFlows.Contains(SubGraphNode))
+	UFlowNode* FlowNode = SubGraphInterface->GetOwningFlowNode();
+	if (!InstancedSubFlows.Contains(FlowNode))
 	{
-		const TWeakObjectPtr<UObject> Owner = SubGraphNode->GetFlowAsset() ? SubGraphNode->GetFlowAsset()->GetOwner() : nullptr;
-		NewInstance = CreateFlowInstance(Owner, SubGraphNode->GetSubAsset().LoadSynchronous(), SavedInstanceName);
+		const TScriptInterface<IFlowAssetOwnerInterface> OwnerInterface = SubGraphInterface->GetOwningFlowAsset()
+			                                                                  ? SubGraphInterface->GetOwningFlowAsset()->GetOwnerInterface()
+			                                                                  : TScriptInterface<IFlowAssetOwnerInterface>();
+		NewInstance = CreateFlowInstance(OwnerInterface, SubGraphInterface->GetSubFlowAsset().LoadSynchronous(), SavedInstanceName);
 
 		if (NewInstance)
 		{
-			InstancedSubFlows.Add(SubGraphNode, NewInstance);
+			InstancedSubFlows.Add(FlowNode, NewInstance);
 
 			if (bPreloading)
 			{
@@ -182,41 +219,42 @@ UFlowAsset* UFlowSubsystem::CreateSubFlow(UFlowNode_AbstractSubGraph* SubGraphNo
 		}
 	}
 
-	if (InstancedSubFlows.Contains(SubGraphNode) && !bPreloading)
+	if (InstancedSubFlows.Contains(FlowNode) && !bPreloading)
 	{
 		// get instanced asset from map - in case it was already instanced by calling CreateSubFlow() with bPreloading == true
-		UFlowAsset* AssetInstance = InstancedSubFlows[SubGraphNode];
+		UFlowAsset* AssetInstance = InstancedSubFlows[FlowNode];
 
-		AssetInstance->NodeOwningThisAssetInstance = SubGraphNode;
-		SubGraphNode->GetFlowAsset()->ActiveSubGraphs.Add(SubGraphNode, AssetInstance);
+		AssetInstance->InterfaceOwningThisAssetInstance = SubGraphInterface;
+		SubGraphInterface->GetOwningFlowAsset()->ActiveSubGraphs.Add(FlowNode, AssetInstance);
 
 		// don't activate Start Node if we're loading Sub Graph from SaveGame
 		if (SavedInstanceName.IsEmpty())
 		{
-			AssetInstance->StartFlow(FlowParameter, SubGraphNode);
+			AssetInstance->StartFlow(FlowParameter, SubGraphInterface->GetFlowDataPinValueSupplierInterface().GetInterface());
 		}
 	}
 
 	return NewInstance;
 }
 
-void UFlowSubsystem::RemoveSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const EFlowFinishPolicy FinishPolicy)
+void UFlowSubsystem::RemoveSubFlow(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const EFlowFinishPolicy FinishPolicy)
 {
-	if (InstancedSubFlows.Contains(SubGraphNode))
+	UFlowNode* FlowNode = SubGraphInterface->GetOwningFlowNode();
+	if (InstancedSubFlows.Contains(FlowNode))
 	{
-		UFlowAsset* AssetInstance = InstancedSubFlows[SubGraphNode];
-		
-		SubGraphNode->GetFlowAsset()->ActiveSubGraphs.Remove(SubGraphNode);
-		InstancedSubFlows.Remove(SubGraphNode);
+		UFlowAsset* AssetInstance = InstancedSubFlows[FlowNode];
+
+		SubGraphInterface->GetOwningFlowAsset()->ActiveSubGraphs.Remove(FlowNode);
+		InstancedSubFlows.Remove(FlowNode);
 
 		AssetInstance->FinishFlow(FinishPolicy);
 
-		// Make sure to set the NodeOwningThisAssetInstance after the FinishFlow call, as it may be needed in the FinishFlow method
-		AssetInstance->NodeOwningThisAssetInstance = nullptr;
+		// Make sure to set the InterfaceOwningThisAssetInstance after the FinishFlow call, as it may be needed in the FinishFlow method
+		AssetInstance->InterfaceOwningThisAssetInstance.Reset();
 	}
 }
 
-UFlowAsset* UFlowSubsystem::CreateFlowInstance(const TWeakObjectPtr<UObject> Owner, UFlowAsset* LoadedFlowAsset, FString NewInstanceName)
+UFlowAsset* UFlowSubsystem::CreateFlowInstance(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* LoadedFlowAsset, FString NewInstanceName)
 {
 	if (LoadedFlowAsset == nullptr)
 	{
@@ -240,7 +278,7 @@ UFlowAsset* UFlowSubsystem::CreateFlowInstance(const TWeakObjectPtr<UObject> Own
 	}
 
 	UFlowAsset* NewInstance = NewObject<UFlowAsset>(this, LoadedFlowAsset->GetClass(), *NewInstanceName, RF_Transient, LoadedFlowAsset, false, nullptr);
-	NewInstance->InitializeInstance(Owner, *LoadedFlowAsset);
+	NewInstance->InitializeInstance(OwnerInterface.GetInterface(), *LoadedFlowAsset);
 
 	LoadedFlowAsset->AddInstance(NewInstance);
 
@@ -273,23 +311,36 @@ void UFlowSubsystem::RemoveInstancedTemplate(UFlowAsset* Template)
 TMap<UObject*, UFlowAsset*> UFlowSubsystem::GetRootInstances() const
 {
 	TMap<UObject*, UFlowAsset*> Result;
-	for (const TPair<UFlowAsset*, TWeakObjectPtr<UObject>>& RootInstance : ObjectPtrDecay(RootInstances))
+	for (const TPair<UFlowAsset*, TScriptInterface<IFlowAssetOwnerInterface>>& RootInstance : ObjectPtrDecay(RootInstances))
 	{
-		Result.Emplace(RootInstance.Value.Get(), RootInstance.Key);
+		if (IsValid(RootInstance.Value.GetObject()))
+		{
+			UObject* RootInstanceOwner = RootInstance.Value->GetAssetOwningObject();
+			if (IsValid(RootInstanceOwner))
+			{
+				Result.Emplace(RootInstanceOwner, RootInstance.Key);
+			}
+		}
 	}
+
 	return Result;
 }
 
 TSet<UFlowAsset*> UFlowSubsystem::GetRootInstancesByOwner(const UObject* Owner) const
 {
 	TSet<UFlowAsset*> Result;
-	for (const TPair<UFlowAsset*, TWeakObjectPtr<UObject>>& RootInstance : ObjectPtrDecay(RootInstances))
+	for (const TPair<UFlowAsset*, TScriptInterface<IFlowAssetOwnerInterface>>& RootInstance : ObjectPtrDecay(RootInstances))
 	{
-		if (Owner && RootInstance.Value == Owner)
+		if (IsValid(RootInstance.Value.GetObject()))
 		{
-			Result.Emplace(RootInstance.Key);
+			const UObject* RootInstanceOwner = RootInstance.Value->GetAssetOwningObject();
+			if (Owner && Owner == RootInstanceOwner)
+			{
+				Result.Emplace(RootInstance.Key);
+			}
 		}
 	}
+
 	return Result;
 }
 
@@ -336,17 +387,21 @@ void UFlowSubsystem::OnGameSaved(UFlowSaveGame* SaveGame)
 	}
 
 	// save Flow Graphs
-	for (const TPair<UFlowAsset*, TWeakObjectPtr<UObject>>& RootInstance : ObjectPtrDecay(RootInstances))
+	for (const TPair<UFlowAsset*, TScriptInterface<IFlowAssetOwnerInterface>>& RootInstance : ObjectPtrDecay(RootInstances))
 	{
-		if (RootInstance.Key && RootInstance.Value.IsValid())
+		if (RootInstance.Key && IsValid(RootInstance.Value.GetObject()))
 		{
-			if (UFlowComponent* FlowComponent = Cast<UFlowComponent>(RootInstance.Value))
+			UObject* RootInstanceOwner = RootInstance.Value->GetAssetOwningObject();
+			if (IsValid(RootInstanceOwner))
 			{
-				FlowComponent->SaveRootFlow(SaveGame->FlowInstances);
-			}
-			else
-			{
-				RootInstance.Key->SaveInstance(SaveGame->FlowInstances);
+				if (UFlowComponent* FlowComponent = Cast<UFlowComponent>(RootInstanceOwner))
+				{
+					FlowComponent->SaveRootFlow(SaveGame->FlowInstances);
+				}
+				else
+				{
+					RootInstance.Key->SaveInstance(SaveGame->FlowInstances);
+				}
 			}
 		}
 	}
@@ -398,9 +453,9 @@ void UFlowSubsystem::LoadRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const F
 	}
 }
 
-void UFlowSubsystem::LoadSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const FString& SavedAssetInstanceName)
+void UFlowSubsystem::LoadSubFlow(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const FString& SavedAssetInstanceName)
 {
-	const TSoftObjectPtr<UFlowAsset> Asset = SubGraphNode->GetSubAsset();
+	const TSoftObjectPtr<UFlowAsset> Asset = SubGraphInterface->GetSubFlowAsset();
 	if (Asset.IsNull())
 	{
 		return;
@@ -413,8 +468,7 @@ void UFlowSubsystem::LoadSubFlow(UFlowNode_AbstractSubGraph* SubGraphNode, const
 		if (AssetRecord.InstanceName == SavedAssetInstanceName
 			&& ((SubGraphAsset && SubGraphAsset->IsBoundToWorld() == false) || AssetRecord.WorldName == GetWorld()->GetName()))
 		{
-			UFlowAsset* LoadedInstance = CreateSubFlow(SubGraphNode, SavedAssetInstanceName);
-			if (LoadedInstance)
+			if (UFlowAsset* LoadedInstance = CreateSubFlow(SubGraphInterface, SavedAssetInstanceName))
 			{
 				LoadedInstance->LoadInstance(AssetRecord);
 			}
@@ -532,7 +586,8 @@ TSet<UFlowComponent*> UFlowSubsystem::GetFlowComponentsByTag(const FGameplayTag 
 	return Result;
 }
 
-TSet<UFlowComponent*> UFlowSubsystem::GetFlowComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<UFlowComponent> ComponentClass, const bool bExactMatch) const
+TSet<UFlowComponent*> UFlowSubsystem::GetFlowComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<UFlowComponent> ComponentClass,
+                                                              const bool bExactMatch) const
 {
 	TSet<TWeakObjectPtr<UFlowComponent>> FoundComponents;
 	FindComponents(Tags, MatchType, bExactMatch, FoundComponents);
@@ -600,7 +655,8 @@ TMap<AActor*, UFlowComponent*> UFlowSubsystem::GetFlowActorsAndComponentsByTag(c
 	return Result;
 }
 
-TMap<AActor*, UFlowComponent*> UFlowSubsystem::GetFlowActorsAndComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<AActor> ActorClass, const bool bExactMatch) const
+TMap<AActor*, UFlowComponent*> UFlowSubsystem::GetFlowActorsAndComponentsByTags(const FGameplayTagContainer Tags, const EGameplayContainerMatchType MatchType, const TSubclassOf<AActor> ActorClass,
+                                                                                const bool bExactMatch) const
 {
 	TSet<TWeakObjectPtr<UFlowComponent>> FoundComponents;
 	FindComponents(Tags, MatchType, bExactMatch, FoundComponents);

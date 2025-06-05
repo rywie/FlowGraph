@@ -120,8 +120,33 @@ void UFlowNode_AbstractSubGraph::TriggerCustomInput(const FName& EventName, cons
 	}
 }
 
+UFlowNode* UFlowNode_AbstractSubGraph::GetOwningFlowNode() const
+{
+	return const_cast<UFlowNode_AbstractSubGraph*>(this);
+}
+
+UFlowAsset* UFlowNode_AbstractSubGraph::GetOwningFlowAsset() const
+{
+	return GetFlowAsset();
+}
+
+TSoftObjectPtr<UFlowAsset> UFlowNode_AbstractSubGraph::GetSubFlowAsset() const
+{
+	return GetSubAsset();
+}
+
+TScriptInterface<IFlowDataPinValueSupplierInterface> UFlowNode_AbstractSubGraph::GetFlowDataPinValueSupplierInterface() const
+{
+	return const_cast<UFlowNode_AbstractSubGraph*>(this);
+}
+
 void UFlowNode_AbstractSubGraph::OnFinishOutput(const FFlowParameter& FlowParameter)
 {
+}
+
+void UFlowNode_AbstractSubGraph::OnFlowAssetSave(const FFlowAssetSaveData& SubAssetRecord)
+{
+	SavedAssetInstanceName = SubAssetRecord.InstanceName;
 }
 
 TSoftObjectPtr<UFlowAsset> UFlowNode_AbstractSubGraph::GetSubAsset() const

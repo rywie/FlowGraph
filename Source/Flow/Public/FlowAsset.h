@@ -5,6 +5,7 @@
 #include "FlowSave.h"
 #include "FlowTypes.h"
 #include "Nodes/FlowNode.h"
+#include "Interfaces/FlowAssetInterface.h"
 
 #if WITH_EDITOR
 #include "FlowMessageLog.h"
@@ -15,7 +16,7 @@
 
 class UFlowNode_CustomOutput;
 class UFlowNode_CustomInput;
-class UFlowNode_AbstractSubGraph;
+class IFlowNodeSubGraphInterface;
 class UFlowSubsystem;
 
 class UEdGraph;
@@ -70,8 +71,8 @@ public:
 	friend class UFlowNode;
 	friend class UFlowNodeBase;
 	friend class UFlowNode_CustomOutput;
-	friend class UFlowNode_AbstractSubGraph;
 	friend class UFlowSubsystem;
+	friend class UFlowNode_AbstractSubGraph;
 
 	friend class FFlowAssetDetails;
 	friend class FFlowNode_SubGraphDetails;
@@ -326,13 +327,13 @@ protected:
 
 	// Object that spawned Root Flow instance, i.e. World Settings or Player Controller
 	// This pointer is passed to child instances: Flow Asset instances created by the SubGraph nodes
-	TWeakObjectPtr<UObject> Owner;
+	TWeakInterfacePtr<IFlowAssetOwnerInterface> OwnerInterface;
 
 	// SubGraph node that created this Flow Asset instance
-	TWeakObjectPtr<UFlowNode_AbstractSubGraph> NodeOwningThisAssetInstance;
+	TWeakInterfacePtr<IFlowNodeSubGraphInterface> InterfaceOwningThisAssetInstance;
 
 	// Flow Asset instances created by SubGraph nodes placed in the current graph
-	TMap<TWeakObjectPtr<UFlowNode_AbstractSubGraph>, TWeakObjectPtr<UFlowAsset>> ActiveSubGraphs;
+	TMap<TWeakObjectPtr<UFlowNode>, TWeakObjectPtr<UFlowAsset>> ActiveSubGraphs;
 
 	// Optional entry points to the graph, similar to blueprint Custom Events
 	// Contains nodes only if it is initialized instance (see InitializeInstance, IsInstanceInitialized), empty otherwise
@@ -354,25 +355,35 @@ protected:
 
 public:
 	UE_DEPRECATED(5.4, "Use version that takes a UFlowAssetReference instead.")
-	virtual void InitializeInstance(const TWeakObjectPtr<UObject> InOwner, UFlowAsset* InTemplateAsset) { InitializeInstance(InOwner, *InTemplateAsset); }
+	virtual void InitializeInstance(const TWeakInterfacePtr<IFlowAssetOwnerInterface> InOwnerInterface, UFlowAsset* InTemplateAsset) { InitializeInstance(InOwnerInterface, *InTemplateAsset); }
 
-	virtual void InitializeInstance(const TWeakObjectPtr<UObject> InOwner, UFlowAsset& InTemplateAsset);
+	virtual void InitializeInstance(const TWeakInterfacePtr<IFlowAssetOwnerInterface> InOwnerInterface, UFlowAsset& InTemplateAsset);
 	virtual void DeinitializeInstance();
 	bool IsInstanceInitialized() const { return IsValid(TemplateAsset); }
 
 	UFlowAsset* GetTemplateAsset() const { return TemplateAsset; }
 
+	UFUNCTION(BlueprintPure, Category = "Flow")
+	TScriptInterface<IFlowAssetOwnerInterface> GetOwnerInterface() const
+	{
+		return OwnerInterface.ToScriptInterface();
+	}
+
 	// Object that spawned Root Flow instance, i.e. World Settings or Player Controller
 	// This pointer is passed to child instances: Flow Asset instances created by the SubGraph nodes
 	UFUNCTION(BlueprintPure, Category = "Flow")
-	UObject* GetOwner() const { return Owner.Get(); }
+	UObject* GetOwner() const
+	{
+		return OwnerInterface.IsValid() ? OwnerInterface->GetAssetOwningObject() : nullptr;
+	}
 
 	template <class T>
 	TWeakObjectPtr<T> GetOwner() const
 	{
-		return Owner.IsValid() ? Cast<T>(Owner) : nullptr;
+		return OwnerInterface.IsValid() ? Cast<T>(OwnerInterface->GetAssetOwningObject()) : nullptr;
 	}
-
+	
+	
 	// Returns the Owner as an Actor, or if Owner is a Component, return its Owner as an Actor
 	UFUNCTION(BlueprintPure, Category = "Flow")
 	AActor* TryFindActorOwner() const;
@@ -391,15 +402,15 @@ public:
 	void TriggerCustomInput(const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter(), IFlowDataPinValueSupplierInterface* DataPinValueSupplier = nullptr);
 
 	// Get Flow Asset instance created by the given SubGraph node
-	TWeakObjectPtr<UFlowAsset> GetFlowInstance(UFlowNode_AbstractSubGraph* SubGraphNode) const;
+	TWeakObjectPtr<UFlowAsset> GetFlowInstance(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface) const;
 
 protected:
-	void TriggerCustomInput_FromSubGraph(UFlowNode_AbstractSubGraph* Node, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter()) const;
+	void TriggerCustomInput_FromSubGraph(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter()) const;
 	void TriggerCustomOutput(const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 
 	void TriggerInput(const FGuid& NodeGuid, const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter());
 	void TriggerFinishOutput(UFlowNodeBase* Node, const FFlowParameter& FlowParameter = FFlowParameter()) const;
-	void TriggerEntryInput(UFlowNode_AbstractSubGraph* SubGraphNode, const FFlowParameter& FlowParameter = FFlowParameter()) const;
+	void TriggerEntryInput(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const FFlowParameter& FlowParameter = FFlowParameter()) const;
 
 	void FinishNode(UFlowNode* Node, const FFlowParameter& FlowParameter = FFlowParameter());
 	void ResetNodes();
@@ -414,7 +425,7 @@ public:
 	UFlowSubsystem* GetFlowSubsystem() const;
 	FName GetDisplayName() const;
 
-	UFlowNode_AbstractSubGraph* GetNodeOwningThisAssetInstance() const;
+	UFlowNode* GetNodeOwningThisAssetInstance() const;
 	UFlowAsset* GetParentInstance() const;
 
 	// Are there any active nodes?
@@ -439,7 +450,7 @@ protected:
 	// Expects to be owned (at runtime) by an object with this class (or one of its subclasses)
 	// NOTE - If the class is an AActor, and the flow asset is owned by a component,
 	//        it will consider the component's owner for the AActor
-	UPROPERTY(EditAnywhere, Category = "Flow", meta = (MustImplement = "/Script/Flow.FlowOwnerInterface"))
+	UPROPERTY(EditAnywhere, Category = "Flow", meta = (AllowAbstract = true, MustImplement = "/Script/Flow.FlowOwnerInterface"))
 	TSubclassOf<UObject> ExpectedOwnerClass;
 
 	//////////////////////////////////////////////////////////////////////////

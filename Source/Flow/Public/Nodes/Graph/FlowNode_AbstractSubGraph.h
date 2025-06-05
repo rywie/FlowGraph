@@ -4,6 +4,7 @@
 
 #include "Nodes/FlowNode.h"
 #include "Interfaces/FlowDataPinGeneratorNodeInterface.h"
+#include "FlowNode_SubGraph_Interface.h"
 
 #include "FlowNode_AbstractSubGraph.generated.h"
 
@@ -11,7 +12,9 @@
  * Creates instance of provided Flow Asset and starts its execution
  */
 UCLASS(Abstract, NotBlueprintable)
-class FLOW_API UFlowNode_AbstractSubGraph : public UFlowNode, public IFlowDataPinGeneratorNodeInterface
+class FLOW_API UFlowNode_AbstractSubGraph : public UFlowNode,
+                                            public IFlowDataPinGeneratorNodeInterface,
+                                            public IFlowNodeSubGraphInterface
 {
 	GENERATED_UCLASS_BODY()
 	friend class UFlowAsset;
@@ -35,6 +38,15 @@ private:
 	UPROPERTY(SaveGame)
 	FFlowParameter CachedFlowParameter;
 
+public:
+	virtual UFlowNode* GetOwningFlowNode() const override;
+	virtual UFlowAsset* GetOwningFlowAsset() const override;
+	virtual TSoftObjectPtr<UFlowAsset> GetSubFlowAsset() const override;
+	virtual TScriptInterface<IFlowDataPinValueSupplierInterface> GetFlowDataPinValueSupplierInterface() const override;
+
+	virtual void OnFinishOutput(const FFlowParameter& FlowParameter) override;
+	virtual void OnFlowAssetSave(const FFlowAssetSaveData& SubAssetRecord) override;
+
 protected:
 	virtual bool CanBeAssetInstanced() const;
 
@@ -53,8 +65,7 @@ protected:
 	virtual void TriggerEntryInput(const FFlowParameter& FlowParameter = FFlowParameter());
 	virtual void TriggerCustomInput(const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 
-	virtual void OnFinishOutput(const FFlowParameter& FlowParameter);
-
+protected:
 	virtual TSoftObjectPtr<UFlowAsset> GetSubAsset() const;
 
 public:

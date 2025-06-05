@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "UObject/WeakInterfacePtr.h"
 #include "GameplayTagContainer.h"
 #include "Types/FlowEnumUtils.h"
 

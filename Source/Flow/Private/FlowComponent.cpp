@@ -55,6 +55,19 @@ void UFlowComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 #endif
 }
 
+UObject* UFlowComponent::GetAssetOwningObject() const
+{
+	return const_cast<UFlowComponent*>(this);
+}
+
+void UFlowComponent::OnNodeInstanceInitialized(UFlowNode* Node)
+{
+}
+
+void UFlowComponent::OnRootFlowFinish()
+{
+}
+
 void UFlowComponent::BeginPlay()
 {
 	Super::BeginPlay();

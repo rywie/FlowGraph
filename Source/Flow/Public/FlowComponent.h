@@ -8,7 +8,7 @@
 #include "FlowSave.h"
 #include "FlowTypes.h"
 #include "Nodes/FlowParameter.h"
-#include "Interfaces/FlowOwnerInterface.h"
+#include "Interfaces/FlowAssetInterface.h"
 #include "FlowComponent.generated.h"
 
 class UFlowAsset;
@@ -45,7 +45,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFlowComponentDynamicNotify, class 
 * Base component of Flow System - makes possible to communicate between Actor, Flow Subsystem and Flow Graphs
 */
 UCLASS(Blueprintable, meta = (BlueprintSpawnableComponent))
-class FLOW_API UFlowComponent : public UActorComponent, public IFlowOwnerInterface
+class FLOW_API UFlowComponent : public UActorComponent,
+                                public IFlowAssetOwnerInterface
 {
 	GENERATED_UCLASS_BODY()
 	friend class UFlowSubsystem;
@@ -66,6 +67,11 @@ private:
 	// Used to replicate tags removed during gameplay
 	UPROPERTY(ReplicatedUsing = OnRep_RemovedIdentityTags)
 	FGameplayTagContainer RemovedIdentityTags;
+
+public:
+	virtual UObject* GetAssetOwningObject() const override;
+	virtual void OnNodeInstanceInitialized(UFlowNode* Node) override;
+	virtual void OnRootFlowFinish() override;
 
 public:
 	virtual void BeginPlay() override;
