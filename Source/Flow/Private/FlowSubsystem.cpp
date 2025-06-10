@@ -308,6 +308,11 @@ void UFlowSubsystem::RemoveInstancedTemplate(UFlowAsset* Template)
 	InstancedTemplates.Remove(Template);
 }
 
+TArray<UFlowAsset*> UFlowSubsystem::GetInstancedTemplates() const
+{
+	return ObjectPtrDecay(InstancedTemplates);
+}
+
 TMap<UObject*, UFlowAsset*> UFlowSubsystem::GetRootInstances() const
 {
 	TMap<UObject*, UFlowAsset*> Result;

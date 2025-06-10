@@ -108,6 +108,9 @@ protected:
 	virtual void RemoveInstancedTemplate(UFlowAsset* Template);
 
 public:
+	UFUNCTION(BlueprintPure, Category = "FlowSubsystem")
+	TArray<UFlowAsset*> GetInstancedTemplates() const;
+
 	/* Returns all assets instanced by object from another system like World Settings */
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem")
 	TMap<UObject*, UFlowAsset*> GetRootInstances() const;
