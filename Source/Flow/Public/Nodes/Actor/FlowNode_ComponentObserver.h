@@ -4,7 +4,7 @@
 
 #include "GameplayTagContainer.h"
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_ActorNode.h"
 #include "FlowNode_ComponentObserver.generated.h"
 
 class UFlowComponent;
@@ -14,7 +14,7 @@ class UFlowComponent;
  * Such nodes usually wait until a specific action occurs in the actor
  */
 UCLASS(Abstract, NotBlueprintable)
-class FLOW_API UFlowNode_ComponentObserver : public UFlowNode
+class FLOW_API UFlowNode_ComponentObserver : public UFlowNodeBase_ActorNode
 {
 	GENERATED_UCLASS_BODY()
 	

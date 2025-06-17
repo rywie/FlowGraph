@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Interfaces/FlowDataPinGeneratorNodeInterface.h"
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_GraphNode.h"
 #include "Types/FlowDataPinProperties.h"
 
 #include "FlowNode_DefineProperties.generated.h"
@@ -12,7 +12,7 @@
  * FlowNode to define data pin property literals for use connecting to data pin inputs in a flow graph
  */
 UCLASS(Blueprintable, meta = (DisplayName = "Define Properties"))
-class FLOW_API UFlowNode_DefineProperties : public UFlowNode, public IFlowDataPinGeneratorNodeInterface
+class FLOW_API UFlowNode_DefineProperties : public UFlowNodeBase_GraphNode, public IFlowDataPinGeneratorNodeInterface
 {
 	GENERATED_UCLASS_BODY()
 

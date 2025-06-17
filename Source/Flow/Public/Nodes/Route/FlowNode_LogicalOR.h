@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_RouteNode.h"
 #include "FlowNode_LogicalOR.generated.h"
 
 /**
@@ -10,7 +10,7 @@
  * Output will be triggered only once
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "OR", Keywords = "|"))
-class FLOW_API UFlowNode_LogicalOR final : public UFlowNode
+class FLOW_API UFlowNode_LogicalOR final : public UFlowNodeBase_RouteNode
 {
 	GENERATED_UCLASS_BODY()
 

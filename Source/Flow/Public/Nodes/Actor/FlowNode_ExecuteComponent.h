@@ -4,7 +4,7 @@
 
 #include "Types/FlowActorOwnerComponentRef.h"
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_ActorNode.h"
 #include "Types/FlowInjectComponentsHelper.h"
 #include "Types/FlowEnumUtils.h"
 
@@ -41,7 +41,7 @@ namespace EExecuteComponentSource_Classifiers
  * Execute a UActorComponent on the owning actor as if it was a flow subgraph
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Execute Component"))
-class FLOW_API UFlowNode_ExecuteComponent : public UFlowNode
+class FLOW_API UFlowNode_ExecuteComponent : public UFlowNodeBase_ActorNode
 {
 	GENERATED_BODY()
 

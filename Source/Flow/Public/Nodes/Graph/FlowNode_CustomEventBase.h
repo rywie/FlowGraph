@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_GraphNode.h"
 #include "FlowNode_CustomEventBase.generated.h"
 
 /**
  * Base class for nodes used to receive/send events between graphs
  */
 UCLASS(Abstract, NotBlueprintable)
-class FLOW_API UFlowNode_CustomEventBase : public UFlowNode
+class FLOW_API UFlowNode_CustomEventBase : public UFlowNodeBase_GraphNode
 {
 	GENERATED_UCLASS_BODY()
 

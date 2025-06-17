@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_RouteNode.h"
 #include "FlowNode_Reroute.generated.h"
 
 /**
  * Reroute
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Reroute"))
-class FLOW_API UFlowNode_Reroute final : public UFlowNode
+class FLOW_API UFlowNode_Reroute final : public UFlowNodeBase_RouteNode
 {
 	GENERATED_UCLASS_BODY()
 	

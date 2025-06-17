@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_GraphNode.h"
 #include "FlowNode_Checkpoint.generated.h"
 
 /**
@@ -10,7 +10,7 @@
  * It's recommended to replace this with game-specific variant and this node to UFlowGraphSettings::HiddenNodes
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Checkpoint", Keywords = "autosave, save"))
-class FLOW_API UFlowNode_Checkpoint final : public UFlowNode
+class FLOW_API UFlowNode_Checkpoint final : public UFlowNodeBase_GraphNode
 {
 	GENERATED_UCLASS_BODY()
 

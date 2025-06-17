@@ -4,14 +4,14 @@
 
 #include "GameplayTagContainer.h"
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_ActorNode.h"
 #include "FlowNode_NotifyActor.generated.h"
 
 /**
  * Finds all Flow Components with matching Identity Tag and calls ReceiveNotify event on these components
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Notify Actor", Keywords = "event"))
-class FLOW_API UFlowNode_NotifyActor : public UFlowNode
+class FLOW_API UFlowNode_NotifyActor : public UFlowNodeBase_ActorNode
 {
 	GENERATED_UCLASS_BODY()
 

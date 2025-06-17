@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_RouteNode.h"
 #include "FlowNode_Counter.generated.h"
 
 /**
  * Counts how many times signal entered this node
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Counter"))
-class FLOW_API UFlowNode_Counter final : public UFlowNode
+class FLOW_API UFlowNode_Counter final : public UFlowNodeBase_RouteNode
 {
 	GENERATED_UCLASS_BODY()
 

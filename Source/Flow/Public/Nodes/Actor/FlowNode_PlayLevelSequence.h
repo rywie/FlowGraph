@@ -7,7 +7,7 @@
 #include "LevelSequencePlayer.h"
 #include "MovieSceneSequencePlayer.h"
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_ActorNode.h"
 #include "FlowNode_PlayLevelSequence.generated.h"
 
 class UFlowLevelSequencePlayer;
@@ -22,7 +22,7 @@ DECLARE_MULTICAST_DELEGATE(FFlowNodeLevelSequenceEvent);
  * - Completed
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Play Level Sequence"))
-class FLOW_API UFlowNode_PlayLevelSequence : public UFlowNode
+class FLOW_API UFlowNode_PlayLevelSequence : public UFlowNodeBase_ActorNode
 {
 	GENERATED_UCLASS_BODY()
 	friend struct FFlowTrackExecutionToken;

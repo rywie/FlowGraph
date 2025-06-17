@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_RouteNode.h"
 #include "FlowNode_ExecutionSequence.generated.h"
 
 /**
  * Executes all outputs sequentially
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Sequence"))
-class FLOW_API UFlowNode_ExecutionSequence final : public UFlowNode
+class FLOW_API UFlowNode_ExecutionSequence final : public UFlowNodeBase_RouteNode
 {
 	GENERATED_UCLASS_BODY()
 

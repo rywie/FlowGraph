@@ -3,14 +3,14 @@
 #pragma once
 
 #include "Engine/EngineTypes.h"
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_RouteNode.h"
 #include "FlowNode_Timer.generated.h"
 
 /**
  * Triggers outputs after time elapsed
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Timer", Keywords = "delay, step, tick"))
-class FLOW_API UFlowNode_Timer : public UFlowNode
+class FLOW_API UFlowNode_Timer : public UFlowNodeBase_RouteNode
 {
 	GENERATED_UCLASS_BODY()
 

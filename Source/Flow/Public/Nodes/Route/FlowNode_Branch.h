@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_RouteNode.h"
 
 #include "FlowNode_Branch.generated.h"
 
 // FEvaluates its AddOns that implement the IFlowPredicateInterface to determine the output pin to trigger
 UCLASS(MinimalApi, NotBlueprintable, meta = (DisplayName = "Branch"))
-class UFlowNode_Branch : public UFlowNode
+class UFlowNode_Branch : public UFlowNodeBase_RouteNode
 {
 	GENERATED_UCLASS_BODY()
 

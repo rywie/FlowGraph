@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_RouteNode.h"
 
 #include "FlowNode_PathRoute.generated.h"
 
@@ -8,7 +8,7 @@
  * 
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Path Route"))
-class FLOW_API UFlowNode_PathRoute final : public UFlowNode
+class FLOW_API UFlowNode_PathRoute final : public UFlowNodeBase_RouteNode
 {
 	GENERATED_UCLASS_BODY()
 

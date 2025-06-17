@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Nodes/FlowNode.h"
+#include "FlowNodeBase_DeveloperNode.h"
 #include "FlowNode_Log.generated.h"
 
 // Variant of ELogVerbosity
@@ -22,7 +22,7 @@ enum class EFlowLogVerbosity : uint8
  * Optionally shows message on screen
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Log", Keywords = "print"))
-class FLOW_API UFlowNode_Log : public UFlowNode
+class FLOW_API UFlowNode_Log : public UFlowNodeBase_DeveloperNode
 {
 	GENERATED_UCLASS_BODY()
 
