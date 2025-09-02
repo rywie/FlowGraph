@@ -17,17 +17,17 @@ public:
 		return Handle != INDEX_NONE;
 	}
 
-	bool operator==(const FFlowParameterHandle &Other) const
+	bool operator==(const FFlowParameterHandle& Other) const
 	{
 		return Handle == Other.Handle;
 	}
 
-	bool operator!=(const FFlowParameterHandle &Other) const
+	bool operator!=(const FFlowParameterHandle& Other) const
 	{
 		return Handle != Other.Handle;
 	}
 
-	friend uint32 GetTypeHash(const FFlowParameterHandle &SpecHandle)
+	friend uint32 GetTypeHash(const FFlowParameterHandle& SpecHandle)
 	{
 		return ::GetTypeHash(SpecHandle.Handle);
 	}
@@ -42,11 +42,12 @@ public:
 		: Handle(INDEX_NONE)
 	{
 	}
-	FFlowParameterHandle(int32 InHandle)
+
+	FFlowParameterHandle(int64 InHandle)
 		: Handle(InHandle)
 	{
 	}
 
 public:
-	int32 Handle;
+	int64 Handle;
 };
