@@ -1,5 +1,4 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
-
 #pragma once
 
 #include "Graph/Nodes/FlowGraphNode.h"
@@ -14,4 +13,8 @@ class FLOWEDITOR_API UFlowGraphNode_Reroute : public UFlowGraphNode
 	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
 	virtual bool ShouldDrawNodeAsControlPointOnly(int32& OutInputPinIndex, int32& OutOutputPinIndex) const override;
 	// --
+
+	virtual bool CanPlaceBreakpoints() const override;
+
+	void ConfigureRerouteNodeFromPinConnections(UEdGraphPin& InPin, UEdGraphPin &OutPin);
 };

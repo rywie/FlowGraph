@@ -1,5 +1,4 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
-
 #pragma once
 
 #include "UObject/WeakInterfacePtr.h"
@@ -14,6 +13,7 @@ class UFlowNode;
 class UFlowAsset;
 class IFlowAssetOwnerInterface;
 class IFlowNodeSubGraphInterface;
+class IFlowDataPinValueSupplierInterface;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSimpleFlowEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSimpleFlowComponentEvent, UFlowComponent*, Component);
@@ -39,7 +39,7 @@ public:
 	friend class UFlowComponent;
 	friend class UFlowNode_AbstractSubGraph;
 
-private:
+protected:
 	/* All asset templates with active instances */
 	UPROPERTY()
 	TArray<TObjectPtr<UFlowAsset>> InstancedTemplates;
@@ -53,7 +53,6 @@ private:
 	TMap<TObjectPtr<UFlowNode>, TObjectPtr<UFlowAsset>> InstancedSubFlows;
 
 #if !UE_BUILD_SHIPPING
-
 public:
 	/* Called after creating the first instance of given Flow Asset */
 	static FNativeFlowAssetEvent OnInstancedTemplateAdded;
@@ -76,8 +75,8 @@ public:
 	virtual void AbortActiveFlows();
 
 	/* Start the root Flow, graph that will eventually instantiate next Flow Graphs through the SubGraph node */
-	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem")
-	virtual void StartRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true,
+	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem", meta = (DefaultToSelf = "Owner"))
+	virtual void StartRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const TScriptInterface<IFlowDataPinValueSupplierInterface> DataPinValueSupplier, const bool bAllowMultipleInstances = true,
 	                           const FFlowParameter& FlowParameter = FFlowParameter());
 
 	virtual UFlowAsset* CreateRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true,
@@ -106,6 +105,14 @@ public:
 protected:
 	virtual void AddInstancedTemplate(UFlowAsset* Template);
 	virtual void RemoveInstancedTemplate(UFlowAsset* Template);
+
+public:
+	/* Try to flush (and clear) all Deferred Trigger scopes.
+	 * (can fail to flush all if a FFlowExecutionGate causes a new halt) */
+	bool TryFlushAllDeferredTriggerScopes() const;
+
+	/* Clear (do not trigger) any remaining deferred transitions. (for shutdown cases) */
+	void ClearAllDeferredTriggerScopes();
 
 public:
 	UFUNCTION(BlueprintPure, Category = "FlowSubsystem")
@@ -141,7 +148,7 @@ public:
 	virtual void OnGameLoaded(UFlowSaveGame* SaveGame);
 
 	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem")
-	virtual void LoadRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const FString& SavedAssetInstanceName);
+	virtual void LoadRootFlow(UObject* Owner, UFlowAsset* FlowAsset, const FString& SavedAssetInstanceName, const bool bAllowMultipleInstances);
 
 	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem")
 	virtual void LoadSubFlow(const TScriptInterface<IFlowNodeSubGraphInterface>& SubGraphInterface, const FString& SavedAssetInstanceName);

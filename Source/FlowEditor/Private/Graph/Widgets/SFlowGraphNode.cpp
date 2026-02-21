@@ -29,6 +29,7 @@
 #include "SNodePanel.h"
 #include "Styling/SlateColor.h"
 #include "TutorialMetaData.h"
+#include "Styling/SlateStyleRegistry.h"
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBorder.h"
@@ -41,7 +42,7 @@
 
 SFlowGraphPinExec::SFlowGraphPinExec()
 {
-	PinColorModifier = UFlowGraphSettings::Get()->ExecPinColorModifier;
+	PinColorModifier = GetDefault<UFlowGraphSettings>()->ExecPinColorModifier;
 }
 
 void SFlowGraphPinExec::Construct(const FArguments& InArgs, UEdGraphPin* InPin)
@@ -84,7 +85,7 @@ void SFlowGraphNode::GetNodeInfoPopups(FNodeInfoContext* Context, TArray<FGraphI
 	const FString& Description = FlowGraphNode->GetNodeDescription(); 
 	if (!Description.IsEmpty())
 	{
-		const FGraphInformationPopupInfo DescriptionPopup = FGraphInformationPopupInfo(nullptr, UFlowGraphSettings::Get()->NodeDescriptionBackground, Description);
+		const FGraphInformationPopupInfo DescriptionPopup = FGraphInformationPopupInfo(nullptr, GetDefault<UFlowGraphSettings>()->NodeDescriptionBackground, Description);
 		Popups.Add(DescriptionPopup);
 	}
 
@@ -98,7 +99,7 @@ void SFlowGraphNode::GetNodeInfoPopups(FNodeInfoContext* Context, TArray<FGraphI
 		}
 		else if (FlowGraphNode->IsContentPreloaded())
 		{
-			const FGraphInformationPopupInfo DescriptionPopup = FGraphInformationPopupInfo(nullptr, UFlowGraphSettings::Get()->NodeStatusBackground, TEXT("Preloaded"));
+			const FGraphInformationPopupInfo DescriptionPopup = FGraphInformationPopupInfo(nullptr, GetDefault<UFlowGraphSettings>()->NodeStatusBackground, TEXT("Preloaded"));
 			Popups.Add(DescriptionPopup);
 		}
 	}
@@ -124,7 +125,11 @@ const FSlateBrush* SFlowGraphNode::GetShadowBrush(bool bSelected) const
 	return SGraphNode::GetShadowBrush(bSelected);
 }
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 6
 void SFlowGraphNode::GetOverlayBrushes(bool bSelected, const FVector2D WidgetSize, TArray<FOverlayBrushInfo>& Brushes) const
+#else
+void SFlowGraphNode::GetOverlayBrushes(bool bSelected, const FVector2f& WidgetSize, TArray<FOverlayBrushInfo>& Brushes) const
+#endif
 {
 	check(DebuggerSubsystem.IsValid());
 	
@@ -164,6 +169,80 @@ void SFlowGraphNode::GetOverlayBrushes(bool bSelected, const FVector2D WidgetSiz
 			}	
 		}
 	}
+
+	// Node custom overlay icons
+	if (const UFlowNodeBase* FlowNodeBase = FlowGraphNode->GetFlowNodeBase())
+	{
+		FName CornerIconBrushName = NAME_None;
+		FName CornerIconStyleSetName = NAME_None;
+		if (FlowNodeBase->GetCornerIcon(CornerIconBrushName, CornerIconStyleSetName))
+		{
+			if (const FSlateBrush* CornerIconBrush = GetSlateBrush(CornerIconBrushName, CornerIconStyleSetName))
+			{
+				FOverlayBrushInfo CornerIconInfo;
+				CornerIconInfo.Brush = CornerIconBrush;
+				CornerIconInfo.OverlayOffset.X = WidgetSize.X - (CornerIconBrush->ImageSize.X * .5f);
+				CornerIconInfo.OverlayOffset.Y = -CornerIconBrush->ImageSize.Y * .5f;
+				Brushes.Add(CornerIconInfo);
+			}
+		}
+		
+		TArray<FFlowNodeOverlayIcon> OverlayIcons;
+		FlowNodeBase->GetOverlayIcons(OverlayIcons, WidgetSize);
+		for (const FFlowNodeOverlayIcon& OverlayIcon : OverlayIcons)
+		{
+			if (OverlayIcon.BrushName.IsNone())
+			{
+				continue;
+			}
+
+			if (const FSlateBrush* IconBrush = GetSlateBrush(OverlayIcon.BrushName, OverlayIcon.StyleSetName))
+			{
+				FOverlayBrushInfo IconBrushInfo;
+				IconBrushInfo.Brush = IconBrush;
+				IconBrushInfo.OverlayOffset = OverlayIcon.Offset;
+				Brushes.Add(IconBrushInfo);
+			}
+		}
+	}
+}
+
+const FSlateBrush* SFlowGraphNode::GetSlateBrush(const FName BrushName, const FName StyleSetName) const
+{
+	if (!StyleSetName.IsNone())
+	{
+		// If we have a specific Style Set Name try and find the brush there.
+		if (const ISlateStyle* AppStyle = FSlateStyleRegistry::FindSlateStyle(StyleSetName))
+		{
+			const FSlateBrush* SlateBrush = AppStyle->GetBrush(BrushName);
+			if (SlateBrush != nullptr && SlateBrush != AppStyle->GetDefaultBrush())
+			{
+				return SlateBrush;
+			}
+		}
+	}
+	else
+	{
+		// If we do not have a specific StyleSet Name then first search the default Flow Editor StyleSet
+		// and finally fallback to the default Unreal StyleSet.
+		
+		const FSlateBrush* SlateBrush = FFlowEditorStyle::Get()->GetBrush(BrushName);
+
+		if (SlateBrush != nullptr && SlateBrush != FFlowEditorStyle::Get()->GetDefaultBrush())
+		{
+			return SlateBrush;
+		}
+		else
+		{
+			SlateBrush = FAppStyle::GetBrush(BrushName);
+			if (SlateBrush != nullptr && SlateBrush != FAppStyle::GetDefaultBrush())
+			{
+				return SlateBrush;
+			}
+		}
+	}
+
+	return nullptr;
 }
 
 void SFlowGraphNode::GetPinBrush(const bool bLeftSide, const float WidgetWidth, const int32 PinIndex, const FFlowBreakpoint* Breakpoint, TArray<FOverlayBrushInfo>& Brushes) const
@@ -371,8 +450,13 @@ void SFlowGraphNode::UpdateGraphNode()
 			.IsGraphNodeHovered(this, &SGraphNode::IsHovered);
 
 		GetOrAddSlot(ENodeZone::TopCenter)
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 6		
 			.SlotOffset(TAttribute<FVector2D>(CommentBubble.Get(), &SCommentBubble::GetOffset))
 			.SlotSize(TAttribute<FVector2D>(CommentBubble.Get(), &SCommentBubble::GetSize))
+#else
+			.SlotOffset2f(TAttribute<FVector2f>(CommentBubble.Get(), &SCommentBubble::GetOffset2f))
+			.SlotSize2f(TAttribute<FVector2f>(CommentBubble.Get(), &SCommentBubble::GetSize2f))
+#endif		
 			.AllowScaling(TAttribute<bool>(CommentBubble.Get(), &SCommentBubble::IsScalingAllowed))
 			.VAlign(VAlign_Top)
 			[
@@ -407,7 +491,7 @@ FSlateColor SFlowGraphNode::GetConfigBoxBackgroundColor() const
 
 void SFlowGraphNode::CreateBelowPinControls(const TSharedPtr<SVerticalBox> InnerVerticalBox)
 {
-	static const FMargin ConfigBoxPadding = FMargin(2.0f, 0.0f, 1.0f, 0.0);
+	static const FMargin ConfigBoxPadding = FMargin(2.0f, 0.0f, 1.0f, 0.0f);
 
 	// Add a box to wrap around the Config Text area to make it a more visually distinct part of the node
 	TSharedPtr<SVerticalBox> BelowPinsBox;
@@ -507,7 +591,7 @@ EVisibility SFlowGraphNode::GetNodeConfigTextVisibility() const
 {
 	// Hide in lower LODs
 	const TSharedPtr<SGraphPanel> OwnerPanel = GetOwnerPanel();
-	if (!OwnerPanel.IsValid() || OwnerPanel->GetCurrentLOD() > EGraphRenderingLOD::MediumDetail)
+	if (!OwnerPanel.IsValid() || OwnerPanel->GetCurrentLOD() >= EGraphRenderingLOD::MediumDetail)
 	{
 		if (ConfigTextBlock && !ConfigTextBlock->GetText().IsEmptyOrWhitespace())
 		{

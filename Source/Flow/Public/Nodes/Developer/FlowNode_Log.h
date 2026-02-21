@@ -1,20 +1,22 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
-
 #pragma once
 
+#include "Nodes/Graph/FlowNode_DefineProperties.h"
 #include "FlowNodeBase_DeveloperNode.h"
 #include "FlowNode_Log.generated.h"
 
-// Variant of ELogVerbosity
+/**
+ * Variant of ELogVerbosity.
+ */
 UENUM(BlueprintType)
 enum class EFlowLogVerbosity : uint8
 {
-	Error UMETA(ToolTip = "Prints a message to console (and log file)"),
-	Warning UMETA(ToolTip = "Prints a message to console (and log file)"),
-	Display UMETA(ToolTip = "Prints a message to console (and log file)"),
-	Log UMETA(ToolTip = "Prints a message to a log file (does not print to console)"),
-	Verbose UMETA(ToolTip = "Prints a verbose message to a log file (if Verbose logging is enabled for the given category, usually used for detailed logging)"),
-	VeryVerbose UMETA(ToolTip = "Prints a verbose message to a log file (if VeryVerbose logging is enabled, usually used for detailed logging that would otherwise spam output)"),
+	Error		UMETA(ToolTip = "Prints a message to console (and log file)"),
+	Warning		UMETA(ToolTip = "Prints a message to console (and log file)"),
+	Display		UMETA(ToolTip = "Prints a message to console (and log file)"),
+	Log			UMETA(ToolTip = "Prints a message to a log file (does not print to console)"),
+	Verbose		UMETA(ToolTip = "Prints a verbose message to a log file (if Verbose logging is enabled for the given category, usually used for detailed logging)"),
+	VeryVerbose	UMETA(ToolTip = "Prints a verbose message to a log file (if VeryVerbose logging is enabled, usually used for detailed logging that would otherwise spam output)"),
 };
 
 /**
@@ -22,13 +24,13 @@ enum class EFlowLogVerbosity : uint8
  * Optionally shows message on screen
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Log", Keywords = "print"))
-class FLOW_API UFlowNode_Log : public UFlowNodeBase_DeveloperNode
+class FLOW_API UFlowNode_Log : public UFlowNode_DefineProperties
 {
 	GENERATED_UCLASS_BODY()
-
+	
 private:
-	// The message to write to the log
-	// (if the Message input pin is not connected to another source)
+	/* The message to write to the log.
+	 * If the Message input pin is not connected to another source. */
 	UPROPERTY(EditAnywhere, Category = "Flow", meta = (DefaultForInputFlowPin, FlowPinType = String))
 	FString Message;
 
@@ -45,11 +47,19 @@ private:
 	FColor TextColor;
 
 protected:
+	// IFlowCoreExecutableInterface
 	virtual void ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter()) override;
-
+	// --
+	
 #if WITH_EDITOR
-
 public:
+	// UObject
+	virtual void PostEditChangeChainProperty(FPropertyChangedChainEvent& PropertyChangedEvent) override;
+	// --
+
 	virtual void UpdateNodeConfigText_Implementation() override;
 #endif
+
+public:
+	EFlowLogVerbosity GetVerbosity() const { return Verbosity; }
 };

@@ -1,5 +1,4 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
-
 #pragma once
 
 #include "AddOns/FlowNodeAddOn.h"
@@ -7,7 +6,6 @@
 
 #include "FlowNodeAddOn_PredicateOR.generated.h"
 
-// Forward Declarations
 class UFlowNode;
 
 UCLASS(MinimalApi, NotBlueprintable, meta = (DisplayName = "OR"))
@@ -28,5 +26,5 @@ public:
 	virtual bool EvaluatePredicate_Implementation() const override;
 	// --
 
-	static bool EvaluatePredicateOR(const TArray<UFlowNodeAddOn*>& AddOns);
+	FLOW_API static bool EvaluatePredicateOR(const TArray<UFlowNodeAddOn*>& AddOns);
 };

@@ -3,6 +3,7 @@
 #include "AddOns/FlowNodeAddOn.h"
 
 #include "FlowLogChannels.h"
+
 #include "Nodes/FlowNode.h"
 
 #include "Misc/RuntimeErrors.h"
@@ -64,12 +65,40 @@ EFlowAddOnAcceptResult UFlowNodeAddOn::AcceptFlowNodeAddOnParent_Implementation(
 
 UFlowNode* UFlowNodeAddOn::GetFlowNode() const
 {
-	// We are making the assumption that this would addlways be known
-	// during runtime and that we are not calling this method before the addon has been
-	// initialized.
+	// We are making the assumption that this would always be known during runtime 
+	// and that we are not calling this method before the addon has been initialized.
 	ensure(FlowNode);
 
 	return FlowNode;
+}
+
+UFlowNode* UFlowNodeAddOn::FindOwningFlowNode() const
+{
+	UObject* OuterObject = GetOuter();
+	UFlowNode* ParentFlowNode = nullptr;
+
+	while (IsValid(OuterObject))
+	{
+		ParentFlowNode = Cast<UFlowNode>(OuterObject);
+		if (ParentFlowNode)
+		{
+			break;
+		}
+
+		OuterObject = OuterObject->GetOuter();
+	}
+
+	return ParentFlowNode;
+}
+
+int32 UFlowNodeAddOn::GetRandomSeed() const
+{
+	if (ensure(FlowNode))
+	{
+		return FlowNode->GetRandomSeed();
+	}
+
+	return 0;
 }
 
 bool UFlowNodeAddOn::IsSupportedInputPinName(const FName& PinName) const
@@ -91,17 +120,7 @@ bool UFlowNodeAddOn::IsSupportedInputPinName(const FName& PinName) const
 
 void UFlowNodeAddOn::CacheFlowNode()
 {
-	UObject* OuterObject = GetOuter();
-	while (IsValid(OuterObject))
-	{
-		FlowNode = Cast<UFlowNode>(OuterObject);
-		if (FlowNode)
-		{
-			break;
-		}
-
-		OuterObject = OuterObject->GetOuter();
-	}
+	FlowNode = FindOwningFlowNode();
 
 	ensureAsRuntimeWarning(FlowNode);
 }
@@ -136,5 +155,10 @@ TArray<FFlowPin> UFlowNodeAddOn::GetContextInputs() const
 TArray<FFlowPin> UFlowNodeAddOn::GetContextOutputs() const
 {
 	return GetPinsForContext(OutputPins);
+}
+
+void UFlowNodeAddOn::RequestReconstructionOnOwningFlowNode() const
+{
+	(void)OnAddOnRequestedParentReconstruction.ExecuteIfBound();
 }
 #endif // WITH_EDITOR

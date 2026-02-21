@@ -25,7 +25,7 @@ void UFlowNode_CustomEventBase::SetEventName(const FName& InEventName)
 #if WITH_EDITOR
 		// Must reconstruct the visual representation if anything that is included in AdaptiveNodeTitles changes
 		OnReconstructionRequested.ExecuteIfBound();
-#endif // WITH_EDITOR
+#endif
 	}
 }
 
@@ -33,7 +33,7 @@ void UFlowNode_CustomEventBase::SetEventName(const FName& InEventName)
 
 FString UFlowNode_CustomEventBase::GetNodeDescription() const
 {
-	if (UFlowSettings::Get()->bUseAdaptiveNodeTitles)
+	if (GetDefault<UFlowSettings>()->bUseAdaptiveNodeTitles)
 	{
 		return Super::GetNodeDescription();
 	}

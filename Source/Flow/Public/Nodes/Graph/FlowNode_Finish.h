@@ -1,13 +1,12 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
-
 #pragma once
 
 #include "FlowNodeBase_GraphNode.h"
 #include "FlowNode_Finish.generated.h"
 
 /**
- * Finish execution of this Flow Asset
- * All active nodes and sub graphs will be deactivated
+ * Finish execution of this Flow Asset.
+ * All active nodes and sub graphs will be deactivated.
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Finish"))
 class FLOW_API UFlowNode_Finish : public UFlowNodeBase_GraphNode

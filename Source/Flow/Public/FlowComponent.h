@@ -1,5 +1,4 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
-
 #pragma once
 
 #include "Components/ActorComponent.h"
@@ -7,8 +6,9 @@
 
 #include "FlowSave.h"
 #include "FlowTypes.h"
+#include "Interfaces/FlowAssetProviderInterface.h"
+#include "Asset/FlowAssetParamsTypes.h"
 #include "Nodes/FlowParameter.h"
-#include "Interfaces/FlowAssetInterface.h"
 #include "FlowComponent.generated.h"
 
 class UFlowAsset;
@@ -25,13 +25,11 @@ struct FNotifyTagReplication
 	UPROPERTY()
 	FGameplayTag NotifyTag;
 
-	FNotifyTagReplication()
-	{
-	}
+	FNotifyTagReplication() {}
 
 	FNotifyTagReplication(const FGameplayTag& InActorTag, const FGameplayTag& InNotifyTag)
 		: ActorTag(InActorTag)
-		  , NotifyTag(InNotifyTag)
+		, NotifyTag(InNotifyTag)
 	{
 	}
 };
@@ -45,33 +43,19 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFlowComponentDynamicNotify, class 
 * Base component of Flow System - makes possible to communicate between Actor, Flow Subsystem and Flow Graphs
 */
 UCLASS(Blueprintable, meta = (BlueprintSpawnableComponent))
-class FLOW_API UFlowComponent : public UActorComponent,
-                                public IFlowAssetOwnerInterface
+class FLOW_API UFlowComponent : public UActorComponent, public IFlowAssetProviderInterface
 {
 	GENERATED_UCLASS_BODY()
+
 	friend class UFlowSubsystem;
-
+	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+//////////////////////////////////////////////////////////////////////////
+// Identity Tags
 
-	//////////////////////////////////////////////////////////////////////////
-	// Identity Tags
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flow")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_IdentityTags, Category = "Flow")
 	FGameplayTagContainer IdentityTags;
-
-private:
-	// Used to replicate tags added during gameplay
-	UPROPERTY(ReplicatedUsing = OnRep_AddedIdentityTags)
-	FGameplayTagContainer AddedIdentityTags;
-
-	// Used to replicate tags removed during gameplay
-	UPROPERTY(ReplicatedUsing = OnRep_RemovedIdentityTags)
-	FGameplayTagContainer RemovedIdentityTags;
-
-public:
-	virtual UObject* GetAssetOwningObject() const override;
-	virtual void OnNodeInstanceInitialized(UFlowNode* Node) override;
-	virtual void OnRootFlowFinish() override;
 
 public:
 	virtual void BeginPlay() override;
@@ -96,10 +80,7 @@ protected:
 
 private:
 	UFUNCTION()
-	void OnRep_AddedIdentityTags();
-
-	UFUNCTION()
-	void OnRep_RemovedIdentityTags();
+	void OnRep_IdentityTags(const FGameplayTagContainer& PreviousTags);
 
 public:
 	UPROPERTY(BlueprintAssignable, Category = "Flow")
@@ -110,28 +91,28 @@ public:
 
 public:
 	void VerifyIdentityTags() const;
-
+		
 	UFUNCTION(BlueprintCallable, Category = "Flow")
 	void LogError(FString Message, const EFlowOnScreenMessageType OnScreenMessageType = EFlowOnScreenMessageType::Permanent) const;
 
-	//////////////////////////////////////////////////////////////////////////
-	// Component sending Notify Tags to Flow Graph, or any other listener
+//////////////////////////////////////////////////////////////////////////
+// Component sending Notify Tags to Flow Graph, or any other listener
 
 private:
-	// Stores only recently sent tags
+	/* Stores only recently sent tags. */
 	UPROPERTY(ReplicatedUsing = OnRep_SentNotifyTags)
 	FGameplayTagContainer RecentlySentNotifyTags;
 
 public:
 	const FGameplayTagContainer& GetRecentlySentNotifyTags() const { return RecentlySentNotifyTags; }
 
-	// Send single notification from the actor to Flow graphs
-	// If set on server, it's always going to be replicated to clients
+	/* Send single notification from the actor to Flow graphs.
+	 * If set on server, it's always going to be replicated to clients. */
 	UFUNCTION(BlueprintCallable, Category = "Flow")
 	void NotifyGraph(const FGameplayTag NotifyTag, const EFlowNetMode NetMode = EFlowNetMode::Authority);
 
-	// Send multiple notifications at once - from the actor to Flow graphs
-	// If set on server, it's always going to be replicated to clients
+	/* Send multiple notifications at once - from the actor to Flow graphs.
+	 * If set on server, it's always going to be replicated to clients. */
 	UFUNCTION(BlueprintCallable, Category = "Flow")
 	void BulkNotifyGraph(const FGameplayTagContainer NotifyTags, const EFlowNetMode NetMode = EFlowNetMode::Authority);
 
@@ -142,15 +123,16 @@ private:
 public:
 	FFlowComponentNotify OnNotifyFromComponent;
 
-	//////////////////////////////////////////////////////////////////////////
-	// Component receiving Notify Tags from Flow Graph
+//////////////////////////////////////////////////////////////////////////
+// Component receiving Notify Tags from Flow Graph
 
 private:
-	// Stores only recently replicated tags
+	/* Stores only recently replicated tags. */
 	UPROPERTY(ReplicatedUsing = OnRep_NotifyTagsFromGraph)
 	FGameplayTagContainer NotifyTagsFromGraph;
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "Flow")
 	virtual void NotifyFromGraph(const FGameplayTagContainer& NotifyTags, const EFlowNetMode NetMode = EFlowNetMode::Authority);
 
 private:
@@ -158,20 +140,20 @@ private:
 	void OnRep_NotifyTagsFromGraph();
 
 public:
-	// Receive notification from Flow graph or another Flow Component
+	/* Receive notification from Flow graph or another Flow Component. */
 	UPROPERTY(BlueprintAssignable, Category = "Flow")
 	FFlowComponentDynamicNotify ReceiveNotify;
 
-	//////////////////////////////////////////////////////////////////////////
-	// Sending Notify Tags between Flow components
+//////////////////////////////////////////////////////////////////////////
+// Sending Notify Tags between Flow components
 
 private:
-	// Stores only recently replicated tags
+	/* Stores only recently replicated tags. */
 	UPROPERTY(ReplicatedUsing = OnRep_NotifyTagsFromAnotherComponent)
 	TArray<FNotifyTagReplication> NotifyTagsFromAnotherComponent;
 
 public:
-	// Send notification to another actor containing Flow Component
+	/* Send notification to another actor containing Flow Component. */
 	UFUNCTION(BlueprintCallable, Category = "Flow")
 	virtual void NotifyActor(const FGameplayTag ActorTag, const FGameplayTag NotifyTag, const EFlowNetMode NetMode = EFlowNetMode::Authority);
 
@@ -179,31 +161,35 @@ private:
 	UFUNCTION()
 	void OnRep_NotifyTagsFromAnotherComponent();
 
-	//////////////////////////////////////////////////////////////////////////
-	// Root Flow
+//////////////////////////////////////////////////////////////////////////
+// Root Flow
 
 public:
-	// Asset that might instantiated as "Root Flow" 
+	/* Asset that might be instantiated as "Root Flow". */ 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RootFlow")
 	TObjectPtr<UFlowAsset> RootFlow;
 
-	// If true, component will start Root Flow on Begin Play
+	/* Flow Asset Params to use as the data pin value supplier for the Root Flow.*/
+	UPROPERTY(EditAnywhere, Category = "RootFlow")
+	FFlowAssetParamsPtr RootFlowParams;
+
+	/* If true, component will start Root Flow on Begin Play. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RootFlow")
 	bool bAutoStartRootFlow;
 
-	// Networking mode for creating this Root Flow
+	/* Networking mode for creating this Root Flow. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RootFlow")
 	EFlowNetMode RootFlowMode;
 
-	// If false, another Root Flow instance won't be created from this component, if this Flow Asset is already instantiated
+	/* If false, another Root Flow instance won't be created from this component, if this Flow Asset is already instantiated. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RootFlow")
 	bool bAllowMultipleInstances;
 
 	UPROPERTY(SaveGame)
 	FString SavedAssetInstanceName;
 
-	// This will instantiate Flow Asset assigned on this component.
-	// Created Flow Asset instance will be a "root flow", as additional Flow Assets can be instantiated via Sub Graph node
+	/* This will instantiate Flow Asset assigned on this component.
+	 * Created Flow Asset instance will be a "root flow", as additional Flow Assets can be instantiated via Sub Graph node. */
 	UFUNCTION(BlueprintCallable, Category = "RootFlow")
 	virtual void StartRootFlow();
 
@@ -217,21 +203,23 @@ public:
 	UFUNCTION(BlueprintPure, Category = "RootFlow", meta = (DeprecatedFunction, DeprecationMessage="Use GetRootInstances() instead."))
 	UFlowAsset* GetRootFlowInstance() const;
 
-	//////////////////////////////////////////////////////////////////////////
-	// Custom Input and Output events
+	// IFlowAssetProviderInterface
+	virtual UFlowAsset* ProvideFlowAsset() const override { return RootFlow; }
+	// --
+
+//////////////////////////////////////////////////////////////////////////
+// Custom Input and Output events
 
 public:
-	// This will trigger a specific CustomInput on this components root flow
+	/* This will trigger a specific CustomInput on this component's root flow. */
 	UFUNCTION(BlueprintCallable, Category = "RootFlow")
 	void TriggerRootFlowCustomInput(const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter()) const;
 
-	// Called when a Root flow asset triggers a CustomOutput
+	/* Called when a Root flow asset triggers a CustomOutput. */
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "OnRootFlowCustomEvent")
 	void BP_OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 
-	virtual void OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter())
-	{
-	}
+	virtual void OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter()) {}
 
 	// UFlowAsset-only access
 	void DispatchRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
@@ -246,8 +234,8 @@ public:
 	UE_DEPRECATED(5.5, "Please use OnTriggerRootFlowCustomOutputDispatcher instead.")
 	void OnTriggerRootFlowOutputEventDispatcher(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 
-	//////////////////////////////////////////////////////////////////////////
-	// SaveGame
+//////////////////////////////////////////////////////////////////////////
+// SaveGame
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "SaveGame")
@@ -265,12 +253,12 @@ public:
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	void OnSave();
-
+	
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	void OnLoad();
-
-	//////////////////////////////////////////////////////////////////////////
-	// Helpers
+	
+//////////////////////////////////////////////////////////////////////////
+// Helpers
 
 public:
 	UFlowSubsystem* GetFlowSubsystem() const;

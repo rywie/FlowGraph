@@ -1,17 +1,12 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
-
 #pragma once
 
-#include "Types/FlowActorOwnerComponentRef.h"
-
 #include "FlowNodeBase_ActorNode.h"
-#include "Types/FlowInjectComponentsHelper.h"
+#include "Types/FlowActorOwnerComponentRef.h"
 #include "Types/FlowEnumUtils.h"
 
 #include "FlowNode_ExecuteComponent.generated.h"
 
-// Forward Declarations
-class IFlowOwnerInterface;
 class UFlowInjectComponentsManager;
 
 UENUM()
@@ -38,7 +33,7 @@ namespace EExecuteComponentSource_Classifiers
 }
 
 /**
- * Execute a UActorComponent on the owning actor as if it was a flow subgraph
+ * Execute a UActorComponent on the owning actor as if it was a flow subgraph.
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "Execute Component"))
 class FLOW_API UFlowNode_ExecuteComponent : public UFlowNodeBase_ActorNode
@@ -46,7 +41,6 @@ class FLOW_API UFlowNode_ExecuteComponent : public UFlowNodeBase_ActorNode
 	GENERATED_BODY()
 
 public:
-
 	UFlowNode_ExecuteComponent();
 
 	// IFlowCoreExecutableInterface
@@ -64,14 +58,24 @@ public:
 	virtual void UpdateNodeConfigText_Implementation() override;
 	// --
 
+	// UFlowNode
+	virtual void GatherPotentialPropertyOwnersForDataPins(TArray<const UObject*>& InOutOwners) const override;
+	// --
+
 #if WITH_EDITOR
+	// IFlowContextPinSupplierInterface	
+	virtual bool SupportsContextPins() const override { return true; }
+	virtual TArray<FFlowPin> GetContextInputs() const override;
+	virtual TArray<FFlowPin> GetContextOutputs() const override;
+	// --
+
 	// UObject
 	virtual void PostLoad() override;
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 	// --
 
 	// UFlowNode
-	virtual FText GetNodeTitle() const override;
+	virtual FText K2_GetNodeTitle_Implementation() const override;
 	virtual EDataValidationResult ValidateNode() override;
 
 	virtual FString GetStatusString() const override;
@@ -79,7 +83,6 @@ public:
 #endif // WITH_EDITOR
 	
 protected:
-
 #if WITH_EDITOR
 	void RefreshPins();
 	const UActorComponent* TryGetExpectedComponent() const;
@@ -89,38 +92,39 @@ protected:
 
 	bool TryInjectComponent();
 
+	const UActorComponent* GetResolvedOrExpectedComponent() const;
+
 	UActorComponent* TryResolveComponent();
+	UActorComponent* GetResolvedComponent() const;
 	TSubclassOf<AActor> TryGetExpectedActorOwnerClass() const;
 
 protected:
-
-	// Executable Component (by name) on the expected Flow owning Actor
-	//  (the component must implement the IFlowExecutableComponentInterface)
+	/* Executable Component (by name) on the expected Flow owning Actor.
+	 * The component must implement the IFlowExecutableComponentInterface. */
 	UPROPERTY(EditAnywhere, Category = "Flow Executable Component", meta = (DisplayName = "Component to Execute", MustImplement = "/Script/Flow.FlowCoreExecutableInterface,/Script/Flow.FlowExternalExecutableInterface", EditConditionHides, EditCondition = "ComponentSource == EExecuteComponentSource::BindToExisting || ComponentSource == EExecuteComponentSource::Undetermined"))
 	FFlowActorOwnerComponentRef ComponentRef;
 
-	// Component (template) to inject on the spawned actor, may be configured inline
+	/* Component (template) to inject on the spawned actor, may be configured inline. */
 	UPROPERTY(EditAnywhere, Instanced, Category = Configuration, DisplayName = "Inject & Execute Component (from Template)", meta = (MustImplement = "/Script/Flow.FlowCoreExecutableInterface,/Script/Flow.FlowExternalExecutableInterface", EditConditionHides, EditCondition = "ComponentSource == EExecuteComponentSource::InjectFromTemplate || ComponentSource == EExecuteComponentSource::Undetermined"))
 	TObjectPtr<UActorComponent> ComponentTemplate = nullptr;
 
-	// Component (class) to inject on the spawned actor
+	/* Component (class) to inject on the spawned actor. */
 	UPROPERTY(EditAnywhere, Category = Configuration, DisplayName = "Inject & Execute Component (by Class)", meta = (MustImplement = "/Script/Flow.FlowCoreExecutableInterface,/Script/Flow.FlowExternalExecutableInterface", EditConditionHides, EditCondition = "ComponentSource == EExecuteComponentSource::InjectFromClass || ComponentSource == EExecuteComponentSource::Undetermined"))
 	TSubclassOf<UActorComponent> ComponentClass = nullptr;
 
-	// Manager object to inject and remove components from the Flow owning Actor
+	/* Manager object to inject and remove components from the Flow owning Actor. */
 	UPROPERTY(Transient)
 	TObjectPtr<UFlowInjectComponentsManager> InjectComponentsManager = nullptr;
 
-	// Look for the component (by class) on the Actor and re-use it (rather than injecting)
-	// if the component already exists.
+	/* Look for the component (by class) on the Actor and re-use it (rather than injecting) if the component already exists. */
 	UPROPERTY(EditAnywhere, Category = Configuration, DisplayName = "Re-use existing component if found", meta = (EditConditionHides, EditCondition = "ComponentSource == EExecuteComponentSource::InjectFromClass"))
 	bool bReuseExistingComponent = true;
 
-	// Allow injecting the component, if it cannot be found on the Actor
+	/* Allow injecting the component, if it cannot be found on the Actor. */
 	UPROPERTY(EditAnywhere, Category = Configuration, DisplayName = "Allow injecting component", meta = (EditConditionHides, EditCondition = "ComponentSource == EExecuteComponentSource::InjectFromClass && bReuseExistingComponent"))
 	bool bAllowInjectComponent = true;
 
-	// Inject component(s) onto the owning Actor
+	/* Inject component(s) onto the owning Actor. */
 	UPROPERTY()
 	EExecuteComponentSource ComponentSource = EExecuteComponentSource::Undetermined;
 };

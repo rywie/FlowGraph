@@ -1,13 +1,12 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
-
 #pragma once
 
 #include "FlowNodeBase_RouteNode.h"
 #include "FlowNode_LogicalAND.generated.h"
 
 /**
- * Logical AND
- * Output will be triggered only once
+ * Logical AND.
+ * Output will be triggered only once.
  */
 UCLASS(NotBlueprintable, meta = (DisplayName = "AND", Keywords = "&"))
 class FLOW_API UFlowNode_LogicalAND final : public UFlowNodeBase_RouteNode

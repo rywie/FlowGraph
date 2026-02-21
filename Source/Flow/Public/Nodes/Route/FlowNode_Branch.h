@@ -1,12 +1,13 @@
 // Copyright https://github.com/MothCocoon/FlowGraph/graphs/contributors
-
 #pragma once
 
 #include "FlowNodeBase_RouteNode.h"
 
 #include "FlowNode_Branch.generated.h"
 
-// FEvaluates its AddOns that implement the IFlowPredicateInterface to determine the output pin to trigger
+/**
+ * FEvaluates its AddOns that implement the IFlowPredicateInterface to determine the output pin to trigger.
+ */
 UCLASS(MinimalApi, NotBlueprintable, meta = (DisplayName = "Branch"))
 class UFlowNode_Branch : public UFlowNodeBase_RouteNode
 {
@@ -17,7 +18,6 @@ public:
 	virtual EFlowAddOnAcceptResult AcceptFlowNodeAddOnChild_Implementation(const UFlowNodeAddOn* AddOnTemplate, const TArray<UFlowNodeAddOn*>& AdditionalAddOnsToAssumeAreChildren) const override;
 	// --
 
-	// Event reacting on triggering Input pin
 	virtual void ExecuteInput(const FName& PinName, const FFlowParameter& FlowParameter = FFlowParameter()) override;
 
 	static const FName INPIN_Evaluate;
