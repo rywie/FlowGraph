@@ -79,13 +79,13 @@ void UFlowSubsystem::AbortActiveFlows()
 }
 
 void UFlowSubsystem::StartRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const TScriptInterface<IFlowDataPinValueSupplierInterface> DataPinValueSupplier, const bool bAllowMultipleInstances /* = true */,
-                                                                                                                                                                                                                                const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
+                                   const FFlowParameter& FlowParameter /*= FFlowParameter()*/)
 {
 	if (FlowAsset)
 	{
 		if (UFlowAsset* NewFlow = CreateRootFlow(OwnerInterface, FlowAsset, bAllowMultipleInstances))
 		{
-			NewFlow->StartFlow(DataPinValueSupplier.GetInterface(), FlowParameter);
+			NewFlow->StartFlow(FlowParameter, DataPinValueSupplier.GetInterface());
 		}
 	}
 #if WITH_EDITOR

@@ -63,7 +63,8 @@ public:
 	// Graph (editor-only)
 
 #if WITH_EDITOR
-public:	
+
+public:
 	friend class UFlowGraph;
 
 	// UObject
@@ -75,6 +76,7 @@ public:
 #endif
 
 #if WITH_EDITORONLY_DATA
+
 public:
 	FSimpleDelegate OnDetailsRefreshRequested;
 
@@ -89,6 +91,7 @@ private:
 #endif
 
 #if WITH_EDITOR
+
 public:
 	UEdGraph* GetGraph() const { return FlowGraph; }
 
@@ -129,6 +132,7 @@ private:
 	TMap<FGuid, TObjectPtr<UFlowNode>> Nodes;
 
 #if WITH_EDITORONLY_DATA
+
 protected:
 	/* Custom Inputs define custom entry points in graph, it's similar to blueprint Custom Events.
 	 * Sub Graph node using this Flow Asset will generate context Input Pin for every valid Event name on this list. */
@@ -172,7 +176,7 @@ public:
 
 		return nullptr;
 	}
-	
+
 	TArray<UFlowNode*> GetAllNodes() const;
 
 	UFUNCTION(BlueprintPure, Category = "FlowAsset")
@@ -351,7 +355,9 @@ public:
 	AActor* TryFindActorOwner() const;
 
 	/* Opportunity to preload content of project-specific nodes. */
-	virtual void PreloadNodes() {}
+	virtual void PreloadNodes()
+	{
+	}
 
 	virtual void PreStartFlow();
 	virtual void StartFlow(const FFlowParameter& FlowParameter = FFlowParameter(), IFlowDataPinValueSupplierInterface* DataPinValueSupplier = nullptr);
@@ -377,10 +383,11 @@ protected:
 	void ResetNodes();
 
 #if !UE_BUILD_SHIPPING
-public:	
+
+public:
 	FFlowSignalEvent OnPinTriggered;
 #endif
-	
+
 public:
 	UFlowSubsystem* GetFlowSubsystem() const;
 	FName GetDisplayName() const;
@@ -400,8 +407,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Flow")
 	const TArray<UFlowNode*>& GetRecordedNodes() const { return RecordedNodes; }
 
-//////////////////////////////////////////////////////////////////////////
-// Deferred trigger support
+	//////////////////////////////////////////////////////////////////////////
+	// Deferred trigger support
 
 public:
 	/* Try to flush (and clear) all Deferred Trigger scopes.
@@ -433,17 +440,17 @@ protected:
 	TSharedPtr<FFlowDeferredTransitionScope> GetTopDeferredTransitionScope() const;
 
 	/* Trigger the node directly (no deferral, no new scope). */
-	void TriggerInputDirect(const FGuid& NodeGuid, const FName& PinName, const FConnectedPin& FromPin);
+	void TriggerInputDirect(const FGuid& NodeGuid, const FName& PinName, const FConnectedPin& FromPin, const FFlowParameter& FlowParameter = FFlowParameter());
 
-//////////////////////////////////////////////////////////////////////////
-// Expected Owner Class support
+	//////////////////////////////////////////////////////////////////////////
+	// Expected Owner Class support
 
 protected:
 	/* Expects to be owned (at runtime) by an object with this class (or one of its subclasses).
 	 * If the class is an AActor, and the Flow Asset is owned by a component, it will consider the component's owner for the AActor. */
 	UPROPERTY(EditAnywhere, Category = "Flow", meta = (AllowAbstract = true, MustImplement = "/Script/Flow.FlowOwnerInterface"))
 	TSubclassOf<UObject> ExpectedOwnerClass;
-	
+
 public:
 	UClass* GetExpectedOwnerClass() const { return ExpectedOwnerClass; }
 
@@ -470,8 +477,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	bool IsBoundToWorld() const;
 
-//////////////////////////////////////////////////////////////////////////
-// FlowAssetParams support (Start node params for a Flow graph)
+	//////////////////////////////////////////////////////////////////////////
+	// FlowAssetParams support (Start node params for a Flow graph)
 
 	/* Default parameters asset for this Flow Asset (optional). */
 	UPROPERTY(EditAnywhere, Category = FlowAssetParams, meta = (ShowCreateNew, HideChildParams))
@@ -488,8 +495,7 @@ public:
 	virtual FString GenerateParamsAssetName() const;
 
 protected:
-
-	void ReconcileBaseAssetParams(const FDateTime& AssetLastSavedTimestamp);		
+	void ReconcileBaseAssetParams(const FDateTime& AssetLastSavedTimestamp);
 #endif
 
 	//////////////////////////////////////////////////////////////////////////

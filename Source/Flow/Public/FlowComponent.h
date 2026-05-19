@@ -8,6 +8,7 @@
 #include "FlowTypes.h"
 #include "Interfaces/FlowAssetProviderInterface.h"
 #include "Asset/FlowAssetParamsTypes.h"
+#include "Interfaces/FlowAssetInterface.h"
 #include "Nodes/FlowParameter.h"
 #include "FlowComponent.generated.h"
 
@@ -25,11 +26,13 @@ struct FNotifyTagReplication
 	UPROPERTY()
 	FGameplayTag NotifyTag;
 
-	FNotifyTagReplication() {}
+	FNotifyTagReplication()
+	{
+	}
 
 	FNotifyTagReplication(const FGameplayTag& InActorTag, const FGameplayTag& InNotifyTag)
 		: ActorTag(InActorTag)
-		, NotifyTag(InNotifyTag)
+		  , NotifyTag(InNotifyTag)
 	{
 	}
 };
@@ -43,20 +46,26 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FFlowComponentDynamicNotify, class 
 * Base component of Flow System - makes possible to communicate between Actor, Flow Subsystem and Flow Graphs
 */
 UCLASS(Blueprintable, meta = (BlueprintSpawnableComponent))
-class FLOW_API UFlowComponent : public UActorComponent, public IFlowAssetProviderInterface
+class FLOW_API UFlowComponent : public UActorComponent,
+                                public IFlowAssetOwnerInterface,
+                                public IFlowAssetProviderInterface
 {
 	GENERATED_UCLASS_BODY()
-
 	friend class UFlowSubsystem;
-	
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
-//////////////////////////////////////////////////////////////////////////
-// Identity Tags
+
+	//////////////////////////////////////////////////////////////////////////
+	// Identity Tags
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_IdentityTags, Category = "Flow")
 	FGameplayTagContainer IdentityTags;
 
+public:
+	virtual UObject* GetAssetOwningObject() const override;
+	virtual void OnNodeInstanceInitialized(UFlowNode* Node) override;
+	virtual void OnRootFlowFinish() override;
+	
 public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -91,12 +100,12 @@ public:
 
 public:
 	void VerifyIdentityTags() const;
-		
+
 	UFUNCTION(BlueprintCallable, Category = "Flow")
 	void LogError(FString Message, const EFlowOnScreenMessageType OnScreenMessageType = EFlowOnScreenMessageType::Permanent) const;
 
-//////////////////////////////////////////////////////////////////////////
-// Component sending Notify Tags to Flow Graph, or any other listener
+	//////////////////////////////////////////////////////////////////////////
+	// Component sending Notify Tags to Flow Graph, or any other listener
 
 private:
 	/* Stores only recently sent tags. */
@@ -123,8 +132,8 @@ private:
 public:
 	FFlowComponentNotify OnNotifyFromComponent;
 
-//////////////////////////////////////////////////////////////////////////
-// Component receiving Notify Tags from Flow Graph
+	//////////////////////////////////////////////////////////////////////////
+	// Component receiving Notify Tags from Flow Graph
 
 private:
 	/* Stores only recently replicated tags. */
@@ -144,8 +153,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Flow")
 	FFlowComponentDynamicNotify ReceiveNotify;
 
-//////////////////////////////////////////////////////////////////////////
-// Sending Notify Tags between Flow components
+	//////////////////////////////////////////////////////////////////////////
+	// Sending Notify Tags between Flow components
 
 private:
 	/* Stores only recently replicated tags. */
@@ -161,11 +170,11 @@ private:
 	UFUNCTION()
 	void OnRep_NotifyTagsFromAnotherComponent();
 
-//////////////////////////////////////////////////////////////////////////
-// Root Flow
+	//////////////////////////////////////////////////////////////////////////
+	// Root Flow
 
 public:
-	/* Asset that might be instantiated as "Root Flow". */ 
+	/* Asset that might be instantiated as "Root Flow". */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RootFlow")
 	TObjectPtr<UFlowAsset> RootFlow;
 
@@ -207,8 +216,8 @@ public:
 	virtual UFlowAsset* ProvideFlowAsset() const override { return RootFlow; }
 	// --
 
-//////////////////////////////////////////////////////////////////////////
-// Custom Input and Output events
+	//////////////////////////////////////////////////////////////////////////
+	// Custom Input and Output events
 
 public:
 	/* This will trigger a specific CustomInput on this component's root flow. */
@@ -219,7 +228,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, DisplayName = "OnRootFlowCustomEvent")
 	void BP_OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 
-	virtual void OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter()) {}
+	virtual void OnRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter())
+	{
+	}
 
 	// UFlowAsset-only access
 	void DispatchRootFlowCustomEvent(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
@@ -234,8 +245,8 @@ public:
 	UE_DEPRECATED(5.5, "Please use OnTriggerRootFlowCustomOutputDispatcher instead.")
 	void OnTriggerRootFlowOutputEventDispatcher(UFlowAsset* RootFlowInstance, const FName& EventName, const FFlowParameter& FlowParameter = FFlowParameter());
 
-//////////////////////////////////////////////////////////////////////////
-// SaveGame
+	//////////////////////////////////////////////////////////////////////////
+	// SaveGame
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "SaveGame")
@@ -253,12 +264,12 @@ public:
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	void OnSave();
-	
+
 	UFUNCTION(BlueprintNativeEvent, Category = "SaveGame")
 	void OnLoad();
-	
-//////////////////////////////////////////////////////////////////////////
-// Helpers
+
+	//////////////////////////////////////////////////////////////////////////
+	// Helpers
 
 public:
 	UFlowSubsystem* GetFlowSubsystem() const;

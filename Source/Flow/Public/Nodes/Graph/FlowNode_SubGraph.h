@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "Interfaces/FlowDataPinGeneratorNodeInterface.h"
 #include "FlowNode_AbstractSubGraph.h"
 
 #include "FlowNode_SubGraph.generated.h"

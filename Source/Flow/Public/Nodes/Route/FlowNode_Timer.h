@@ -76,7 +76,6 @@ public:
 	virtual void UpdateNodeConfigText_Implementation() override;
 
 protected:
-	virtual FString GetNodeDescription() const override;
 	virtual FString GetStatusString() const override;
 #endif
 };

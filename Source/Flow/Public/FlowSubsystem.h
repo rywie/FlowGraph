@@ -53,6 +53,7 @@ protected:
 	TMap<TObjectPtr<UFlowNode>, TObjectPtr<UFlowAsset>> InstancedSubFlows;
 
 #if !UE_BUILD_SHIPPING
+
 public:
 	/* Called after creating the first instance of given Flow Asset */
 	static FNativeFlowAssetEvent OnInstancedTemplateAdded;
@@ -76,7 +77,8 @@ public:
 
 	/* Start the root Flow, graph that will eventually instantiate next Flow Graphs through the SubGraph node */
 	UFUNCTION(BlueprintCallable, Category = "FlowSubsystem", meta = (DefaultToSelf = "Owner"))
-	virtual void StartRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const TScriptInterface<IFlowDataPinValueSupplierInterface> DataPinValueSupplier, const bool bAllowMultipleInstances = true,
+	virtual void StartRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const TScriptInterface<IFlowDataPinValueSupplierInterface> DataPinValueSupplier,
+	                           const bool bAllowMultipleInstances = true,
 	                           const FFlowParameter& FlowParameter = FFlowParameter());
 
 	virtual UFlowAsset* CreateRootFlow(const TScriptInterface<IFlowAssetOwnerInterface>& OwnerInterface, UFlowAsset* FlowAsset, const bool bAllowMultipleInstances = true,

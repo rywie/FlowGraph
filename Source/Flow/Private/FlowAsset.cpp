@@ -13,7 +13,7 @@
 #include "Nodes/Graph/FlowNode_CustomInput.h"
 #include "Nodes/Graph/FlowNode_CustomOutput.h"
 #include "Nodes/Graph/FlowNode_Start.h"
-#include "Nodes/Graph/FlowNode_SubGraph.h"
+#include "Nodes/Graph/FlowNode_AbstractSubGraph.h"
 #include "Nodes/Graph/FlowNode_SubGraph_Interface.h"
 #include "Types/FlowAutoDataPinsWorkingData.h"
 #include "Types/FlowDataPinValue.h"
@@ -46,9 +46,9 @@ FString UFlowAsset::ValidationError_NullAddOnNodeInstance = TEXT("Node with GUID
 
 UFlowAsset::UFlowAsset(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, bWorldBound(true)
+	  , bWorldBound(true)
 #if WITH_EDITORONLY_DATA
-	, FlowGraph(nullptr)
+	  , FlowGraph(nullptr)
 #endif
 	  , AllowedNodeClasses({UFlowNodeBase::StaticClass()})
 	  , AllowedInSubgraphNodeClasses({UFlowNode_AbstractSubGraph::StaticClass()})

@@ -137,6 +137,11 @@ void UFlowNode_Timer::OnParameterStep(const FFlowParameter& FlowParameter)
 
 void UFlowNode_Timer::OnCompletion()
 {
+	OnParameterCompletion(CachedFlowParameter);
+}
+
+void UFlowNode_Timer::OnParameterCompletion(const FFlowParameter& FlowParameter)
+{
 	TriggerOutput(TEXT("Completed"), bFinishFlow, EFlowPinActivationType::Default, FlowParameter);
 }
 

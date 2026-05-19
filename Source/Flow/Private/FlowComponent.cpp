@@ -21,10 +21,10 @@
 
 UFlowComponent::UFlowComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, RootFlow(nullptr)
-	, bAutoStartRootFlow(true)
-	, RootFlowMode(EFlowNetMode::Authority)
-	, bAllowMultipleInstances(true)
+	  , RootFlow(nullptr)
+	  , bAutoStartRootFlow(true)
+	  , RootFlowMode(EFlowNetMode::Authority)
+	  , bAllowMultipleInstances(true)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
@@ -52,6 +52,19 @@ void UFlowComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME(ThisClass, NotifyTagsFromGraph);
 	DOREPLIFETIME(ThisClass, NotifyTagsFromAnotherComponent);
 #endif
+}
+
+UObject* UFlowComponent::GetAssetOwningObject() const
+{
+	return const_cast<UFlowComponent*>(this);
+}
+
+void UFlowComponent::OnNodeInstanceInitialized(UFlowNode* Node)
+{
+}
+
+void UFlowComponent::OnRootFlowFinish()
+{
 }
 
 void UFlowComponent::BeginPlay()
@@ -228,7 +241,6 @@ void UFlowComponent::RemoveIdentityTags(FGameplayTagContainer Tags, const EFlowN
 
 void UFlowComponent::OnRep_IdentityTags(const FGameplayTagContainer& PreviousTags)
 {
-
 	// Any tags that are now in the IdentityTags container but haven't been previously must have been added.
 	FGameplayTagContainer AddedTags;
 	for (const FGameplayTag& Tag : IdentityTags)
@@ -611,17 +623,17 @@ bool UFlowComponent::IsFlowNetMode(const EFlowNetMode NetMode) const
 {
 	switch (NetMode)
 	{
-		case EFlowNetMode::Any:
-			return true;
-		case EFlowNetMode::Authority:
-			return GetOwner()->HasAuthority();
-		case EFlowNetMode::ClientOnly:
-			return IsNetMode(NM_Client) && GetDefault<UFlowSettings>()->bCreateFlowSubsystemOnClients;
-		case EFlowNetMode::ServerOnly:
-			return IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer);
-		case EFlowNetMode::SinglePlayerOnly:
-			return IsNetMode(NM_Standalone);
-		default:
-			return false;
+	case EFlowNetMode::Any:
+		return true;
+	case EFlowNetMode::Authority:
+		return GetOwner()->HasAuthority();
+	case EFlowNetMode::ClientOnly:
+		return IsNetMode(NM_Client) && GetDefault<UFlowSettings>()->bCreateFlowSubsystemOnClients;
+	case EFlowNetMode::ServerOnly:
+		return IsNetMode(NM_DedicatedServer) || IsNetMode(NM_ListenServer);
+	case EFlowNetMode::SinglePlayerOnly:
+		return IsNetMode(NM_Standalone);
+	default:
+		return false;
 	}
 }

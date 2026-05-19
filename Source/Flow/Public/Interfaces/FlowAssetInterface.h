@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FlowOwnerInterface.h"
+#include "CoreMinimal.h"
 
 #include "FlowAssetInterface.generated.h"
 
@@ -9,13 +9,13 @@ class UFlowNode;
 /**
  * 
  */
-UINTERFACE()
-class UFlowAssetOwnerInterface : public UFlowOwnerInterface
+UINTERFACE(MinimalAPI, Blueprintable, BlueprintType)
+class UFlowAssetOwnerInterface : public UInterface
 {
 	GENERATED_BODY()
 };
 
-class FLOW_API IFlowAssetOwnerInterface : public IFlowOwnerInterface
+class FLOW_API IFlowAssetOwnerInterface
 {
 	GENERATED_BODY()
 
