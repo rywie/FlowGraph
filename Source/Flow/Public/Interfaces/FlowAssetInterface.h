@@ -9,7 +9,7 @@ class UFlowNode;
 /**
  * 
  */
-UINTERFACE(MinimalAPI, Blueprintable, BlueprintType)
+UINTERFACE(MinimalAPI, BlueprintType, Blueprintable)
 class UFlowAssetOwnerInterface : public UInterface
 {
 	GENERATED_BODY()
